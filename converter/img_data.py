@@ -16,7 +16,9 @@ class ImgData:
     image_figure_title_text: str
     image_surrounding_texts: list
     
-    def __init__(self, image: np.ndarray, page_boxes: list, image_box_index: int, figure_title_threshold: float = 0.05):
+    use_gpu = False
+    
+    def __init__(self, image: np.ndarray, page_boxes: list, image_box_index: int, figure_title_threshold: float = 0.05, gpu=False):
         """_summary_
 
         Args:
@@ -40,6 +42,8 @@ class ImgData:
         self.image_figure_title_box = None
         self.image_surrounding_text_boxes = []
         self.coordinate = image_coordinate
+        
+        self.use_gpu = gpu
         
         # 偵測圖片周圍的可用 boxes
         min_figure_title_distance = self.image_diagonal_length * figure_title_threshold
@@ -69,13 +73,13 @@ class ImgData:
         # figure_title 部分
         if self.image_has_figure_title:
             x1, y1, x2, y2 = map(int, self.image_figure_title_box['coordinate'])
-            ocr = ImgOcr(raw_image[y1:y2, x1:x2])
+            ocr = ImgOcr(raw_image[y1:y2, x1:x2], gpu=self.use_gpu)
             self.image_figure_title_text = ocr.extracted_text
         # text boxes 部分
         self.image_surrounding_texts = []
         for box in self.image_surrounding_text_boxes:
             x1, y1, x2, y2 = map(int, box['coordinate'])
-            ocr = ImgOcr(raw_image[y1:y2, x1:x2])
+            ocr = ImgOcr(raw_image[y1:y2, x1:x2], gpu=self.use_gpu)
             self.image_surrounding_texts.append(ocr.extracted_text)
         pass
     

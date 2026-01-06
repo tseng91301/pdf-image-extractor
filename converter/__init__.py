@@ -12,18 +12,20 @@ class PdfInfo:
     pdf_uid: str
     tmp_files_path = "tmp/PdfInfo/"
     pdf_doc: fitz.Document = None
+    use_gpu = False
     
     scanned_to_images = False
     pdf_img_paths = []
     
     pdf_layouts = []
     pdf_imgdatas = []
-    def __init__(self, pdf_path):
+    def __init__(self, pdf_path, gpu=False):
         self.pdf_path = pdf_path
         self.pdf_uid = random_uid.generate()
         self.tmp_files_path = os.path.join(self.tmp_files_path, self.pdf_uid)
         os.makedirs(self.tmp_files_path, exist_ok=True)
         self.pdf_doc = fitz.open(self.pdf_path)
+        self.use_gpu = gpu
         
     def to_images(self, dpi: int = 100, get_output_path: bool = False):
         """
@@ -68,7 +70,8 @@ class PdfInfo:
                     self.pdf_imgdatas.append(ImgData(
                         image=l['input_img'],
                         page_boxes=l['boxes'],
-                        image_box_index=i
+                        image_box_index=i,
+                        gpu=self.use_gpu
                     ))
         return self.pdf_imgdatas
     
