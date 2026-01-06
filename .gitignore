@@ -1,1 +1,6 @@
 example_pdfs/big_images.pdf
+venv/
+tmp_pages/
+tmp/
+output/
+__pycache__/
