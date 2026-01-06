@@ -8,6 +8,7 @@ class ImgData:
     image: np.ndarray
     coordinate: list
     image_diagonal_length: float
+    img_page: int # 使用 pdf 解析功能時，需要知道圖片所在的頁數
     
     image_has_figure_title: bool
     image_figure_title_box: dict

@@ -1,6 +1,8 @@
 import os
 import fitz  # PyMuPDF
 from PIL import Image
+import cv2
+import json
 
 from paddleocr import LayoutDetection
 
@@ -64,17 +66,56 @@ class PdfInfo:
             self.to_images()
             pass
         self.pdf_imgdatas = []
-        for l in self.pdf_layouts:
+        for i0, l in enumerate(self.pdf_layouts):
             for i, v in enumerate(l['boxes']):
                 if v["label"] == "image":
-                    self.pdf_imgdatas.append(ImgData(
+                    i_d = ImgData(
                         image=l['input_img'],
                         page_boxes=l['boxes'],
                         image_box_index=i,
                         gpu=self.use_gpu
-                    ))
+                    )
+                    i_d.img_page = i0
+                    self.pdf_imgdatas.append(i_d)
         return self.pdf_imgdatas
     
+    def extract_image_description(self, export=False):
+        n = len(self.pdf_imgdatas)
+        for i, img in enumerate(self.pdf_imgdatas):
+            print(f"Getting surrounding texts and figure_title of image {i+1}/{n}, reading page {img.img_page+1}")
+            img.get_surroundings(cv2.imread(self.pdf_img_paths[img.img_page]))
+        if export:
+            self.export_all_image_datas()
+            
+    def export_all_image_datas(self, path: str=None):
+        if path is None:
+            path = f"output/{self.pdf_uid}/image_datas/"
+        os.makedirs(path, exist_ok=True)
+        print(f"Exporting data into {path}...")
+        for i, img_data in enumerate(self.pdf_imgdatas):
+            name = f"image_{i:04d}"
+            description = {}
+            description["figure_title"] = ""
+            if img_data.image_has_figure_title:
+                description["figure_title"] = img_data.image_figure_title_text
+            description["surrounding_texts"] = img_data.image_surrounding_texts
+            Image.fromarray(img_data.image).save(os.path.join(path, f"{name}.png"))
+            open(os.path.join(path, f"{name}.json"), "w").write(json.dumps(description, ensure_ascii=False, indent=4))
+        print(f"Export successfully!")
+            
+    def export_all_images_and_image_descriptions(self):
+        """
+        Docstring for export_all_images_and_image_descriptions
+        
+        :param self: Description
+        說明:
+            將上面的方法全部結合起來，一個指令直接提取 pdf 中所有圖片以及可能的說明文字
+        """
+        self.to_images(dpi=100)
+        self.label_layout()
+        self.label_images()
+        self.extract_image_description(export=True)
+        
     def __del__(self):
         self.pdf_doc.close()
         if os.path.exists(self.tmp_files_path):
