@@ -1,13 +1,17 @@
 import numpy as np
 from PIL import Image
+import fitz
 
 from .distance import box_distance, normalize_box
 from .img2text import ImgOcr
+from .tools.coordinates import map_bbox
+from .tools.text_validation import is_garbled_text
 
 class ImgData:
     image: np.ndarray
     coordinate: list
     image_diagonal_length: float
+    raw_pdf_path: str # 原始的 PDF 文件所在位置，提取圖片周圍文字時會使用到
     img_page: int # 使用 pdf 解析功能時，需要知道圖片所在的頁數
     
     image_has_figure_title: bool
@@ -71,17 +75,40 @@ class ImgData:
         """
         功能: 從 __init__ 中提取出的 text box 以及 figure_title box 去 OCR 出文字
         """
+        # 取得 raw pdf
+        doc = fitz.open(self.raw_pdf_path)
+        page = doc[self.img_page]
+        raw_width = page.rect.width
+        raw_height = page.rect.height
+        (img_height, img_width) = raw_image.shape[:2]
+        # print(f"raw_width={raw_width}, raw_height={raw_height}, img_width={img_width}, img_height={img_height}")
+        
         # figure_title 部分
         if self.image_has_figure_title:
             x1, y1, x2, y2 = map(int, self.image_figure_title_box['coordinate'])
-            ocr = ImgOcr(raw_image[y1:y2, x1:x2], gpu=self.use_gpu)
-            self.image_figure_title_text = ocr.extracted_text
+            # 嘗試直接提取自元
+            (x1_t, y1_t, x2_t, y2_t) = map_bbox(x1, y1, x2, y2, img_width, img_height, raw_width, raw_height)
+            rect = fitz.Rect(int(x1_t), int(y1_t), int(x2_t), int(y2_t))
+            text = page.get_text("text", clip=rect)
+            if is_garbled_text(text) or len(text) == 0:
+                ocr = ImgOcr(raw_image[y1:y2, x1:x2], gpu=self.use_gpu)
+                self.image_figure_title_text = ocr.extracted_text
+            else:
+                self.image_figure_title_text = text
         # text boxes 部分
         self.image_surrounding_texts = []
         for box in self.image_surrounding_text_boxes:
             x1, y1, x2, y2 = map(int, box['coordinate'])
-            ocr = ImgOcr(raw_image[y1:y2, x1:x2], gpu=self.use_gpu)
-            self.image_surrounding_texts.append(ocr.extracted_text)
+            # 嘗試直接提取自元
+            (x1_t, y1_t, x2_t, y2_t) = map_bbox(x1, y1, x2, y2, img_width, img_height, raw_width, raw_height)
+            # print(f"Extract words from ({x1_t}, {y1_t}, {x2_t}, {y2_t}) at page {self.img_page+1}, image coordinates=({x1}, {y1}, {x2}, {y2})")
+            rect = fitz.Rect(int(x1_t), int(y1_t), int(x2_t), int(y2_t))
+            text = page.get_text("text", clip=rect)
+            if is_garbled_text(text) or len(text) == 0:
+                ocr = ImgOcr(raw_image[y1:y2, x1:x2], gpu=self.use_gpu)
+                self.image_surrounding_texts.append(ocr.extracted_text)
+            else:
+                self.image_surrounding_texts.append(text)
         pass
     
     def save_image(self, path: str):

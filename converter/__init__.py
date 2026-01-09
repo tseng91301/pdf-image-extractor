@@ -51,17 +51,28 @@ class PdfInfo:
             print(f"PDF is now converted to images, stored in {temp_images_path}.")
             return temp_images_path
         
-    def label_layout(self):
+    def label_layout(self, output=False):
+        """
+        將 pdf 的各種 Layout 標記出來，會使用 PP-DocLayout_plus-L 模型來進行偵測
+        """
         if not self.scanned_to_images:
             self.to_images()
             pass
         self.pdf_layouts = []
         model = LayoutDetection(model_name="PP-DocLayout_plus-L")
-        for img_path in self.pdf_img_paths:
-            self.pdf_layouts.append(model.predict(img_path, batch_size=1, layout_nms=True)[0])
+        for i, img_path in enumerate(self.pdf_img_paths):
+            p = model.predict(img_path, batch_size=1, layout_nms=True)
+            self.pdf_layouts.append(p[0])
+            
+        if output:
+            for i, v in enumerate(self.pdf_layouts):
+                v.save_to_img(f"output/{self.pdf_uid}/layout_detection/{i+1}.png")
         return self.pdf_layouts
     
     def label_images(self):
+        """
+        將已經進行 Layout Labeling 的資料下去尋找圖片，並將所有找到的圖片放到 ImgData 物件裡面進行分析
+        """
         if not self.scanned_to_images:
             self.to_images()
             pass
@@ -76,10 +87,15 @@ class PdfInfo:
                         gpu=self.use_gpu
                     )
                     i_d.img_page = i0
+                    i_d.raw_pdf_path = self.pdf_path
                     self.pdf_imgdatas.append(i_d)
         return self.pdf_imgdatas
     
     def extract_image_description(self, export=False):
+        """
+        將所有圖片周圍的 title, text 的文字資料提取出來
+        方法: 先嘗試使用一般的 pdf 文字提取，若提取不到或是提取出來為亂碼會自動使用 OCR 來取得文字
+        """
         n = len(self.pdf_imgdatas)
         for i, img in enumerate(self.pdf_imgdatas):
             print(f"Getting surrounding texts and figure_title of image {i+1}/{n}, reading page {img.img_page+1}")
