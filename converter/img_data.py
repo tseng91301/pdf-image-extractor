@@ -1,14 +1,17 @@
 import numpy as np
 from PIL import Image
 import fitz
+import os
 
 from .distance import box_distance, normalize_box
 from .img2text import ImgOcr
 from .tools.coordinates import map_bbox
 from .tools.text_validation import is_garbled_text
+from .tools import random_uid
 
 class ImgData:
-    image: np.ndarray
+    uid: str
+    store_path = "tmp/ImgData"
     coordinate: list
     image_diagonal_length: float
     raw_pdf_path: str # 原始的 PDF 文件所在位置，提取圖片周圍文字時會使用到
@@ -27,8 +30,8 @@ class ImgData:
         """_summary_
 
         Args:
-            image (np.ndarray): 輸入的圖像 (numpy array)
-            page_boxes (list): 其他Layout 元素的座標位置 [x1, y1, x2, y2]
+            image (np.ndarray): 輸入的圖像 (numpy array) (通常為完整的頁面)
+            page_boxes (list): 其他 Layout 元素的座標位置 [x1, y1, x2, y2]
             image_box_index (int): 圖片的 box index
         
         Description: 
@@ -38,8 +41,16 @@ class ImgData:
                 2. 尋找距離圖片最近的 3 個 text 區塊
         """
         image_coordinate = normalize_box(page_boxes[image_box_index]['coordinate'])
+        self.uid = random_uid.generate()
+        
+        # 將圖片透過座標方框擷取出來並暫存
         x1, y1, x2, y2 = map(int, image_coordinate)
-        self.image = image[y1:y2, x1:x2]
+        image = image[y1:y2, x1:x2]
+        self.store_path = os.path.join(self.store_path, self.uid)
+        os.makedirs(self.store_path, exist_ok=True)
+        self.store_path = os.path.join(self.store_path, "image.png")
+        Image.fromarray(image).save(self.store_path)
+        
         self.image_diagonal_length = np.linalg.norm(
             np.array(image_coordinate[2:]) - np.array(image_coordinate[:2])
         )
@@ -70,6 +81,14 @@ class ImgData:
         text_distances.sort(key=lambda x: x[1])
         for box, d in text_distances[:3]:
             self.image_surrounding_text_boxes.append(box)
+    
+    def update_image(self, image: np.ndarray):
+        """
+        更新物件所儲存的圖片本體 (圖片本體不會再被使用到，因此可以被更新)
+        輸入: 純圖片的 numpy 陣列
+        動作: 更新儲存於暫存區的圖片檔案
+        """
+        Image.fromarray(image).save(self.store_path)
             
     def get_surroundings(self, raw_image: np.ndarray):
         """
@@ -112,4 +131,9 @@ class ImgData:
         pass
     
     def save_image(self, path: str):
-        Image.fromarray(self.image).save(path)
+        with open(path, "wb") as f:
+            with open(self.store_path, "rb") as r:
+                f.write(r.read())
+                r.close()
+                f.close()
+        

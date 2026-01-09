@@ -3,10 +3,12 @@ import fitz  # PyMuPDF
 from PIL import Image
 import cv2
 import json
+import numpy as np
 
 from paddleocr import LayoutDetection
 
 from .tools import random_uid
+from .tools.coordinates import map_bbox
 from .img_data import ImgData
 
 class PdfInfo:
@@ -67,9 +69,10 @@ class PdfInfo:
         if output:
             for i, v in enumerate(self.pdf_layouts):
                 v.save_to_img(f"output/{self.pdf_uid}/layout_detection/{i+1}.png")
+            print(f"Layout results saved into output/{self.pdf_uid}/layout_detection/")
         return self.pdf_layouts
     
-    def label_images(self):
+    def label_images(self, optimize_resolution=False, optimize_dpi=500):
         """
         將已經進行 Layout Labeling 的資料下去尋找圖片，並將所有找到的圖片放到 ImgData 物件裡面進行分析
         """
@@ -88,6 +91,19 @@ class PdfInfo:
                     )
                     i_d.img_page = i0
                     i_d.raw_pdf_path = self.pdf_path
+                    if optimize_resolution:
+                        # 從原版的 pdf 文件用較高畫質擷取圖片範圍
+                        page = self.pdf_doc[i0]
+                        pdf_raw_width = page.rect.width
+                        pdf_raw_height = page.rect.height
+                        (pdf_bitmap_height, pdf_bitmap_width) = l['input_img'].shape[:2]
+                        x1, y1, x2, y2 = map(int, l['boxes'][i]['coordinate'])
+                        (x1_t, y1_t, x2_t, y2_t) = map_bbox(x1, y1, x2, y2, pdf_bitmap_width, pdf_bitmap_height, pdf_raw_width, pdf_raw_height)
+                        rect = fitz.Rect(int(x1_t), int(y1_t), int(x2_t), int(y2_t))
+                        pix = page.get_pixmap(dpi=optimize_dpi, clip=rect)
+                        img = np.frombuffer(pix.samples, dtype=np.uint8).reshape(pix.h, pix.w, pix.n)
+                        i_d.update_image(img)
+                        pass
                     self.pdf_imgdatas.append(i_d)
         return self.pdf_imgdatas
     
@@ -115,7 +131,7 @@ class PdfInfo:
             if img_data.image_has_figure_title:
                 description["figure_title"] = img_data.image_figure_title_text
             description["surrounding_texts"] = img_data.image_surrounding_texts
-            Image.fromarray(img_data.image).save(os.path.join(path, f"{name}.png"))
+            img_data.save_image(os.path.join(path, f"{name}.png"))
             open(os.path.join(path, f"{name}.json"), "w").write(json.dumps(description, ensure_ascii=False, indent=4))
         print(f"Export successfully!")
             
