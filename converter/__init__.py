@@ -11,6 +11,32 @@ from .tools import random_uid
 from .tools.coordinates import map_bbox
 from .img_data import ImgData
 
+def match_xref_for_rect(page: fitz.Page, rect_pdf: fitz.Rect):
+    """
+    回傳：best_xref, best_image_rect, best_coverage
+    best_coverage = intersection_area / rect_area
+    """
+    rect_pdf = rect_pdf & page.rect  # 保險：裁到頁面內
+    if rect_pdf.is_empty:
+        return (None, None, 0.0)
+
+    best = (None, None, 0.0)
+
+    for img in page.get_images(full=True):
+        xref = img[0]
+        rects = page.get_image_rects(xref)  # 這張 xref 在頁面上出現的位置(可能多個)
+
+        for r in rects:
+            inter = r & rect_pdf
+            if inter.is_empty:
+                continue
+
+            coverage = inter.get_area() / (rect_pdf.get_area() + 1e-9)
+            if coverage > best[2]:
+                best = (xref, r, coverage)
+
+    return best
+
 class PdfInfo:
     pdf_path: str
     pdf_uid: str
@@ -72,7 +98,7 @@ class PdfInfo:
             print(f"Layout results saved into output/{self.pdf_uid}/layout_detection/")
         return self.pdf_layouts
     
-    def label_images(self, optimize_resolution=False, optimize_dpi=500):
+    def label_images(self, optimize_resolution=False, optimize_dpi=500, use_xref=True):
         """
         將已經進行 Layout Labeling 的資料下去尋找圖片，並將所有找到的圖片放到 ImgData 物件裡面進行分析
         """
@@ -93,6 +119,7 @@ class PdfInfo:
                     i_d.raw_pdf_path = self.pdf_path
                     if optimize_resolution:
                         # 從原版的 pdf 文件用較高畫質擷取圖片範圍
+                        now_img_data_index = len(self.pdf_imgdatas)
                         page = self.pdf_doc[i0]
                         pdf_raw_width = page.rect.width
                         pdf_raw_height = page.rect.height
@@ -100,8 +127,25 @@ class PdfInfo:
                         x1, y1, x2, y2 = map(int, l['boxes'][i]['coordinate'])
                         (x1_t, y1_t, x2_t, y2_t) = map_bbox(x1, y1, x2, y2, pdf_bitmap_width, pdf_bitmap_height, pdf_raw_width, pdf_raw_height)
                         rect = fitz.Rect(int(x1_t), int(y1_t), int(x2_t), int(y2_t))
-                        pix = page.get_pixmap(dpi=optimize_dpi, clip=rect)
-                        img = np.frombuffer(pix.samples, dtype=np.uint8).reshape(pix.h, pix.w, pix.n)
+                        # 先使用 xref 尋找可能符合的圖片
+                        use_render = not use_xref
+                        if use_xref:
+                            (xref, _, cov) = match_xref_for_rect(page, rect)
+                            if xref is not None and cov >= 0.6:
+                                info = self.pdf_doc.extract_image(xref)
+                                img_bytes = info["image"]          # bytes
+                                img = cv2.imdecode(
+                                    np.frombuffer(img_bytes, np.uint8),
+                                    cv2.IMREAD_COLOR               # BGR, uint8
+                                )
+                                print(f"Image {now_img_data_index+1} using xref")
+                            else:
+                                use_render = True
+                        if use_render:
+                            # 直接渲染出來並剪取圖片
+                            pix = page.get_pixmap(dpi=optimize_dpi, clip=rect, colorspace=fitz.csRGB)  # 高dpi裁切
+                            img = np.frombuffer(pix.samples, dtype=np.uint8).reshape(pix.h, pix.w, pix.n)
+                            print(f"Image {now_img_data_index+1} using render")
                         i_d.update_image(img)
                         pass
                     self.pdf_imgdatas.append(i_d)
