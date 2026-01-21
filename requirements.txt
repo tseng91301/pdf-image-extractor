@@ -3,5 +3,7 @@ opencv-python
 Pillow
 PyMuPDF
 paddleocr
-paddlepaddle
+paddlepaddle=3.2.2
 matplotlib
+sentence-transformers
+faiss-cpu

@@ -45,10 +45,10 @@ class ImgData:
         
         # 將圖片透過座標方框擷取出來並暫存
         x1, y1, x2, y2 = map(int, image_coordinate)
-        image = image[y1:y2, x1:x2]
         self.store_path = os.path.join(self.store_path, self.uid)
         os.makedirs(self.store_path, exist_ok=True)
         self.store_path = os.path.join(self.store_path, "image.png")
+        image = image[y1:y2, x1:x2]
         Image.fromarray(image).save(self.store_path)
         
         self.image_diagonal_length = np.linalg.norm(

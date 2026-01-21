@@ -3,4 +3,5 @@ venv/
 tmp_pages/
 tmp/
 output/
+output_stored/
 __pycache__/

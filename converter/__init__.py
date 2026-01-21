@@ -40,6 +40,7 @@ def match_xref_for_rect(page: fitz.Page, rect_pdf: fitz.Rect):
 class PdfInfo:
     pdf_path: str
     pdf_uid: str
+    pdf_name: str
     tmp_files_path = "tmp/PdfInfo/"
     pdf_doc: fitz.Document = None
     use_gpu = False
@@ -53,6 +54,7 @@ class PdfInfo:
         self.pdf_path = pdf_path
         self.pdf_uid = random_uid.generate()
         self.tmp_files_path = os.path.join(self.tmp_files_path, self.pdf_uid)
+        self.pdf_name = os.path.splitext(os.path.basename(self.pdf_path))[0]
         os.makedirs(self.tmp_files_path, exist_ok=True)
         self.pdf_doc = fitz.open(self.pdf_path)
         self.use_gpu = gpu
@@ -90,6 +92,7 @@ class PdfInfo:
         model = LayoutDetection(model_name="PP-DocLayout_plus-L")
         for i, img_path in enumerate(self.pdf_img_paths):
             p = model.predict(img_path, batch_size=1, layout_nms=True)
+            p[0]['input_img'] = cv2.cvtColor(cv2.imread(img_path), cv2.COLOR_BGR2RGB) # 使用原本擷取出來的圖片
             self.pdf_layouts.append(p[0])
             
         if output:
@@ -134,10 +137,10 @@ class PdfInfo:
                             if xref is not None and cov >= 0.6:
                                 info = self.pdf_doc.extract_image(xref)
                                 img_bytes = info["image"]          # bytes
-                                img = cv2.imdecode(
+                                img = cv2.cvtColor(cv2.imdecode(
                                     np.frombuffer(img_bytes, np.uint8),
                                     cv2.IMREAD_COLOR               # BGR, uint8
-                                )
+                                ), cv2.COLOR_BGR2RGB)
                                 print(f"Image {now_img_data_index+1} using xref")
                             else:
                                 use_render = True
@@ -164,6 +167,10 @@ class PdfInfo:
             self.export_all_image_datas()
             
     def export_all_image_datas(self, path: str=None):
+        metadata = {}
+        metadata["name"] = self.pdf_name
+        metadata["uid"] = self.pdf_uid
+        metadata["imgs"] = []
         if path is None:
             path = f"output/{self.pdf_uid}/image_datas/"
         os.makedirs(path, exist_ok=True)
@@ -176,7 +183,8 @@ class PdfInfo:
                 description["figure_title"] = img_data.image_figure_title_text
             description["surrounding_texts"] = img_data.image_surrounding_texts
             img_data.save_image(os.path.join(path, f"{name}.png"))
-            open(os.path.join(path, f"{name}.json"), "w").write(json.dumps(description, ensure_ascii=False, indent=4))
+            metadata["imgs"].append({"name": name, "page": img_data.img_page+1, "coordinate": img_data.coordinate, "figure_title": description["figure_title"], "surrounding_texts": description["surrounding_texts"]})
+        open(os.path.join(path, "metadata.json"), "w").write(json.dumps(metadata, ensure_ascii=False, indent=4))
         print(f"Export successfully!")
             
     def export_all_images_and_image_descriptions(self):
