@@ -11,6 +11,27 @@ def normalize_text(s: str) -> str:
     s = re.sub(r"\n{3,}", "\n\n", s)
     return s.strip()
 
+def chunk_text(text, chunk_size=120, overlap=30):
+    if not text:
+        return []
+
+    text = text.strip()
+    chunks = []
+    start = 0
+    L = len(text)
+
+    while start < L:
+        end = min(start + chunk_size, L)
+        chunk = text[start:end].strip()
+        if chunk:
+            chunks.append(chunk)
+        start += chunk_size - overlap
+        if start < 0:
+            break
+
+    return chunks
+
+
 def build_caption_text(fig_title: str, surrounding_texts: list[str], n_sur=3) -> str:
     fig_title = normalize_text(fig_title)
     sur = "\n".join(normalize_text(x) for x in (surrounding_texts or [])[:n_sur])
