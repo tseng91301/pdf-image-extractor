@@ -4,6 +4,10 @@ from PIL import Image
 import faiss
 from sentence_transformers import SentenceTransformer
 
+
+# ----------------------------
+# Utils
+# ----------------------------
 def normalize_text(s: str) -> str:
     s = s or ""
     s = s.replace("\u3000", " ")
@@ -11,66 +15,86 @@ def normalize_text(s: str) -> str:
     s = re.sub(r"\n{3,}", "\n\n", s)
     return s.strip()
 
+
 def chunk_text(text, chunk_size=120, overlap=30):
     if not text:
         return []
-
     text = text.strip()
     chunks = []
     start = 0
+    step = max(1, chunk_size - overlap)
     L = len(text)
-
     while start < L:
         end = min(start + chunk_size, L)
-        chunk = text[start:end].strip()
-        if chunk:
-            chunks.append(chunk)
-        start += chunk_size - overlap
-        if start < 0:
-            break
-
+        c = text[start:end].strip()
+        if c:
+            chunks.append(c)
+        start += step
     return chunks
 
 
-def build_caption_text(fig_title: str, surrounding_texts: list[str], n_sur=3) -> str:
-    fig_title = normalize_text(fig_title)
-    sur = "\n".join(normalize_text(x) for x in (surrounding_texts or [])[:n_sur])
-    if fig_title and sur:
-        return fig_title + "\n" + sur
-    return fig_title or sur
-
-def l2norm(x: np.ndarray) -> np.ndarray:
-    x = x.astype("float32")
-    n = np.linalg.norm(x, axis=1, keepdims=True) + 1e-12
-    return x / n
-
+# ----------------------------
+# Retriever
+# ----------------------------
 class MultiModalRetriever:
-    def __init__(self, model_name="clip-ViT-B-32"):
-        self.model = SentenceTransformer(model_name)
+    def __init__(
+        self,
+        text_model_name="google/embeddinggemma-300m",
+        image_model_name="clip-ViT-B-32",
+    ):
+        # models
+        self.text_model = SentenceTransformer(text_model_name)
+        self.image_model = SentenceTransformer(image_model_name)
 
-        # 3 個 index：title/caption, surrounding, image
-        self.title_index = None
-        self.sur_index = None
-        self.img_index = None
+        # FAISS indices
+        self.title_index = None     # text
+        self.sur_index = None       # text (pooled, only for recall)
+        self.img_index = None       # image
+
+        # dims
+        self.text_dim = None
+        self.image_dim = None
+
+        # stored vectors
+        self.v_title = None
+        self.v_img = None
+        self.v_sur_chunks = []      # list[np.ndarray], per image (n_chunks, text_dim)
+        self.sur_chunks_text = []   # list[list[str]]
 
         self.meta = []
-        self.v_title = None
-        self.v_sur = None
-        self.v_img = None
-        self.dim = None
 
-    def _ensure_index(self, dim: int):
+    # ----------------------------
+    # Index init
+    # ----------------------------
+    def _ensure_index(self, text_dim: int, image_dim: int):
         if self.title_index is None:
-            self.title_index = faiss.IndexFlatIP(dim)
-            self.sur_index   = faiss.IndexFlatIP(dim)
-            self.img_index   = faiss.IndexFlatIP(dim)
-            self.dim = dim
+            self.title_index = faiss.IndexFlatIP(text_dim)
+            self.sur_index = faiss.IndexFlatIP(text_dim)
+            self.text_dim = text_dim
 
-    def add_document(self, json_path: str, images_dir: str, n_sur=3, doc_name_override=None):
+        if self.img_index is None:
+            self.img_index = faiss.IndexFlatIP(image_dim)
+            self.image_dim = image_dim
+
+    # ----------------------------
+    # Add documents
+    # ----------------------------
+    def add_document(
+        self,
+        json_path: str,
+        images_dir: str,
+        n_sur=3,
+        doc_name_override=None,
+        chunk_size=20,
+        overlap=4,
+    ):
         data = json.load(open(json_path, "r", encoding="utf-8"))
         imgs = data["imgs"]
 
-        titles, sur_texts, image_paths, new_meta = [], [], [], []
+        titles = []
+        image_paths = []
+        sur_chunks_text_list = []
+        new_meta = []
 
         for it in imgs:
             img_name = it["name"]
@@ -80,13 +104,16 @@ class MultiModalRetriever:
 
             fig_title = normalize_text(it.get("figure_title", ""))
 
-            # surrounding texts：取前 n_sur 段，各段 normalize 後用換行串起來
             sur_list = (it.get("surrounding_texts", []) or [])[:n_sur]
-            sur_text = "\n".join(normalize_text(x) for x in sur_list).strip()
+            sur_list = [normalize_text(x) for x in sur_list if x.strip()]
+
+            sur_chunks = []
+            for sur in sur_list:
+                sur_chunks.extend(chunk_text(sur, chunk_size, overlap))
 
             titles.append(fig_title)
-            sur_texts.append(sur_text)
             image_paths.append(png_path)
+            sur_chunks_text_list.append(sur_chunks)
 
             new_meta.append({
                 "doc_name": doc_name_override or data.get("name"),
@@ -95,96 +122,165 @@ class MultiModalRetriever:
                 "image_name": img_name,
                 "image_path": png_path,
                 "coordinate": it.get("coordinate"),
-                "figure_title": it.get("figure_title", ""),
-                "surrounding_texts": it.get("surrounding_texts", []),
-                "title_text_used": fig_title,
-                "sur_text_used": sur_text,
+                "figure_title": fig_title,
+                "sur_text_list": sur_list,
+                "sur_chunks_used": sur_chunks,
             })
 
         if not image_paths:
             return 0
 
-        # --- embeddings ---
-        v_title = self.model.encode(
-            titles, batch_size=64, show_progress_bar=True,
-            convert_to_numpy=True, normalize_embeddings=True
+        # ---- text embeddings (title) ----
+        v_title = self.text_model.encode(
+            titles,
+            batch_size=64,
+            convert_to_numpy=True,
+            normalize_embeddings=True,
+            show_progress_bar=True,
         ).astype("float32")
 
-        v_sur = self.model.encode(
-            sur_texts, batch_size=64, show_progress_bar=True,
-            convert_to_numpy=True, normalize_embeddings=True
-        ).astype("float32")
+        # ---- text embeddings (surrounding chunks) ----
+        flat_chunks = []
+        chunk_ranges = []
+        cur = 0
+        for chunks in sur_chunks_text_list:
+            flat_chunks.extend(chunks)
+            chunk_ranges.append((cur, cur + len(chunks)))
+            cur += len(chunks)
 
+        if flat_chunks:
+            v_sur_all = self.text_model.encode(
+                flat_chunks,
+                batch_size=128,
+                convert_to_numpy=True,
+                normalize_embeddings=True,
+                show_progress_bar=True,
+            ).astype("float32")
+        else:
+            v_sur_all = None
+
+        # ---- image embeddings ----
         pil_imgs = [Image.open(p).convert("RGB") for p in image_paths]
-        v_img = self.model.encode(
-            pil_imgs, batch_size=32, show_progress_bar=True,
-            convert_to_numpy=True, normalize_embeddings=True
+        v_img = self.image_model.encode(
+            pil_imgs,
+            batch_size=32,
+            convert_to_numpy=True,
+            normalize_embeddings=True,
+            show_progress_bar=True,
         ).astype("float32")
 
-        self._ensure_index(v_title.shape[1])
+        # ---- ensure indices ----
+        self._ensure_index(v_title.shape[1], v_img.shape[1])
 
-        # --- add to faiss ---
+        # ---- add to indices ----
         self.title_index.add(v_title)
-        self.sur_index.add(v_sur)
         self.img_index.add(v_img)
 
-        # --- keep vectors for rerank dot ---
-        if self.v_title is None:
-            self.v_title = v_title
-            self.v_sur = v_sur
-            self.v_img = v_img
+        # pooled sur for recall (mean, only for candidate recall)
+        if v_sur_all is not None:
+            v_sur_pool = []
+            for a, b in chunk_ranges:
+                if a == b:
+                    v_sur_pool.append(np.zeros((self.text_dim,), dtype="float32"))
+                else:
+                    v_sur_pool.append(v_sur_all[a:b].mean(axis=0))
+            v_sur_pool = np.vstack(v_sur_pool)
         else:
-            self.v_title = np.vstack([self.v_title, v_title])
-            self.v_sur   = np.vstack([self.v_sur, v_sur])
-            self.v_img   = np.vstack([self.v_img, v_img])
+            v_sur_pool = np.zeros((len(image_paths), self.text_dim), dtype="float32")
+
+        self.sur_index.add(v_sur_pool)
+
+        # ---- store vectors ----
+        self.v_title = v_title if self.v_title is None else np.vstack([self.v_title, v_title])
+        self.v_img = v_img if self.v_img is None else np.vstack([self.v_img, v_img])
+
+        for i, (a, b) in enumerate(chunk_ranges):
+            if v_sur_all is None or a == b:
+                self.v_sur_chunks.append(np.zeros((0, self.text_dim), dtype="float32"))
+                self.sur_chunks_text.append([])
+            else:
+                self.v_sur_chunks.append(v_sur_all[a:b])
+                self.sur_chunks_text.append(sur_chunks_text_list[i])
 
         self.meta.extend(new_meta)
         return len(new_meta)
 
+    # ----------------------------
+    # Reset + build
+    # ----------------------------
     def build(self, json_path: str, images_dir: str, n_sur=3):
         self.title_index = None
         self.sur_index = None
         self.img_index = None
-        self.meta = []
+        self.text_dim = None
+        self.image_dim = None
+
         self.v_title = None
-        self.v_sur = None
         self.v_img = None
-        self.dim = None
+        self.v_sur_chunks = []
+        self.sur_chunks_text = []
+        self.meta = []
+
         return self.add_document(json_path, images_dir, n_sur=n_sur)
 
+    # ----------------------------
+    # Search
+    # ----------------------------
     def search(
-        self, query: str, topk=10, k_each=50,
-        alpha=0.6,          # text vs image
-        beta_title=0.7,     # title(caption) vs surrounding (text 內部)
-        beta_sur=0.3
+        self,
+        query: str,
+        topk=10,
+        k_each=50,
+        alpha=0.6,
+        beta_title=0.7,
+        beta_sur=0.3,
     ):
-        if self.title_index is None or self.sur_index is None or self.img_index is None:
-            raise RuntimeError("Index not built. Call build() or add_document() first.")
+        if self.title_index is None:
+            raise RuntimeError("Index not built")
 
-        # 確保 text 內部權重總和為 1（避免你手滑）
+        # normalize weights
         s = beta_title + beta_sur
-        if s <= 0:
-            raise ValueError("beta_title + beta_sur must be > 0")
         beta_title /= s
-        beta_sur   /= s
+        beta_sur /= s
 
-        q = self.model.encode([query], convert_to_numpy=True, normalize_embeddings=True).astype("float32")
+        # encode query
+        q_text = self.text_model.encode(
+            [query],
+            convert_to_numpy=True,
+            normalize_embeddings=True,
+        ).astype("float32")
 
-        # 各取候選（title / surrounding / image 都取一批）
-        Dt, It = self.title_index.search(q, k_each)
-        Ds, Is = self.sur_index.search(q, k_each)
-        Di, Ii = self.img_index.search(q, k_each)
+        q_img = self.image_model.encode(
+            [query],
+            convert_to_numpy=True,
+            normalize_embeddings=True,
+        ).astype("float32")
 
-        cand = set(It[0].tolist()) | set(Is[0].tolist()) | set(Ii[0].tolist())
+        # recall
+        _, It = self.title_index.search(q_text, k_each)
+        _, Is = self.sur_index.search(q_text, k_each)
+        _, Ii = self.img_index.search(q_img, k_each)
+
+        cand = set(It[0]) | set(Is[0]) | set(Ii[0])
 
         results = []
         for idx in cand:
-            s_title = float(np.dot(q[0], self.v_title[idx]))
-            s_sur   = float(np.dot(q[0], self.v_sur[idx]))
-            s_img   = float(np.dot(q[0], self.v_img[idx]))
+            s_title = float(np.dot(q_text[0], self.v_title[idx]))
+
+            v_chunks = self.v_sur_chunks[idx]
+            if v_chunks.shape[0] == 0:
+                s_sur = 0.0
+                best_chunk = None
+            else:
+                scores = v_chunks @ q_text[0]
+                best_i = int(np.argmax(scores))
+                s_sur = float(scores[best_i])
+                best_chunk = self.sur_chunks_text[idx][best_i]
+
+            s_img = float(np.dot(q_img[0], self.v_img[idx]))
 
             s_text = beta_title * s_title + beta_sur * s_sur
-            score  = alpha * s_text + (1 - alpha) * s_img
+            score = alpha * s_text + (1 - alpha) * s_img
 
             m = self.meta[idx]
             results.append({
@@ -193,23 +289,15 @@ class MultiModalRetriever:
                 "s_title": s_title,
                 "s_sur": s_sur,
                 "s_img": s_img,
-                "doc_name": m["doc_name"],
-                "uid": m["uid"],
-                "page": m["page"],
-                "image_name": m["image_name"],
-                "image_path": m["image_path"],
-                "figure_title": m["figure_title"],
-                "title_text_used": m["title_text_used"],
-                "sur_text_used": m["sur_text_used"],
-                "coordinate": m["coordinate"],
+                "best_sur_chunk": best_chunk,
+                **m,
             })
 
         results.sort(key=lambda x: x["score"], reverse=True)
         return results[:topk]
 
-
 # ===== 用法 =====
-r = MultiModalRetriever(model_name="clip-ViT-B-32")
+r = MultiModalRetriever()
 r.add_document("output_stored/L1Vin1RByA/image_datas/metadata.json", "output_stored/L1Vin1RByA/image_datas", n_sur=3)
 r.add_document("output_stored/43Uk9N1gnY/image_datas/metadata.json", "output_stored/43Uk9N1gnY/image_datas", n_sur=3)
 
