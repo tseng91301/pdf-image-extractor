@@ -90,7 +90,7 @@ class ImgData:
         """
         Image.fromarray(image).save(self.store_path)
             
-    def get_surroundings(self, raw_image: np.ndarray):
+    def get_surroundings(self, raw_image: np.ndarray, nl=False):
         """
         功能: 從 __init__ 中提取出的 text box 以及 figure_title box 去 OCR 出文字
         """
@@ -110,9 +110,10 @@ class ImgData:
             rect = fitz.Rect(int(x1_t), int(y1_t), int(x2_t), int(y2_t))
             text = page.get_text("text", clip=rect)
             if is_garbled_text(text) or len(text) == 0:
-                ocr = ImgOcr(raw_image[y1:y2, x1:x2], gpu=self.use_gpu)
+                ocr = ImgOcr(raw_image[y1:y2, x1:x2], gpu=self.use_gpu, nl=False)
                 self.image_figure_title_text = ocr.extracted_text
             else:
+                text = text.replace("\n", "")
                 self.image_figure_title_text = text
         # text boxes 部分
         self.image_surrounding_texts = []
@@ -124,9 +125,11 @@ class ImgData:
             rect = fitz.Rect(int(x1_t), int(y1_t), int(x2_t), int(y2_t))
             text = page.get_text("text", clip=rect)
             if is_garbled_text(text) or len(text) == 0:
-                ocr = ImgOcr(raw_image[y1:y2, x1:x2], gpu=self.use_gpu)
+                ocr = ImgOcr(raw_image[y1:y2, x1:x2], gpu=self.use_gpu, nl=nl)
                 self.image_surrounding_texts.append(ocr.extracted_text)
             else:
+                if not nl:
+                    text = text.replace("\n", "")
                 self.image_surrounding_texts.append(text)
         pass
     

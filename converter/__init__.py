@@ -154,7 +154,7 @@ class PdfInfo:
                     self.pdf_imgdatas.append(i_d)
         return self.pdf_imgdatas
     
-    def extract_image_description(self, export=False):
+    def extract_image_description(self, export=False, nl=False):
         """
         將所有圖片周圍的 title, text 的文字資料提取出來
         方法: 先嘗試使用一般的 pdf 文字提取，若提取不到或是提取出來為亂碼會自動使用 OCR 來取得文字
@@ -162,7 +162,7 @@ class PdfInfo:
         n = len(self.pdf_imgdatas)
         for i, img in enumerate(self.pdf_imgdatas):
             print(f"Getting surrounding texts and figure_title of image {i+1}/{n}, reading page {img.img_page+1}")
-            img.get_surroundings(cv2.imread(self.pdf_img_paths[img.img_page]))
+            img.get_surroundings(cv2.imread(self.pdf_img_paths[img.img_page]), nl=nl)
         if export:
             self.export_all_image_datas()
             
