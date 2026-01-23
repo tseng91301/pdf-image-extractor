@@ -205,6 +205,31 @@ class MultiModalRetriever:
         self.meta.extend(new_meta)
         return len(new_meta)
 
+    def add_folder(
+        self,
+        folder_path: str,
+        n_sur=3,
+        doc_name_override=None,
+        chunk_size=20,
+        overlap=4,
+    ):
+        """
+        直接新增一個資料夾，結構為:
+        {folder_path}/
+            metadata.json
+            image_0000.png
+            image_0001.png
+            ...
+        """
+        return self.add_document(
+            os.path.join(folder_path, "metadata.json"),
+            folder_path,
+            n_sur=n_sur,
+            doc_name_override=doc_name_override,
+            chunk_size=chunk_size,
+            overlap=overlap,
+        )
+
     # ----------------------------
     # Reset + build
     # ----------------------------
@@ -298,19 +323,16 @@ class MultiModalRetriever:
 
 # ===== 用法 =====
 r = MultiModalRetriever()
-r.add_document("output_stored/L1Vin1RByA/image_datas/metadata.json", "output_stored/L1Vin1RByA/image_datas", n_sur=3)
-r.add_document("output_stored/43Uk9N1gnY/image_datas/metadata.json", "output_stored/43Uk9N1gnY/image_datas", n_sur=3)
+r.add_folder("output_stored/L1Vin1RByA/image_datas", n_sur=3)
+r.add_folder("output_stored/43Uk9N1gnY/image_datas", n_sur=3)
 
 hits = r.search(
-    "管內有很多隻螞蟻",
-    topk=10,
-    alpha=0.6,        # text 60%, image 40%
-    beta_title=0.8,   # text 裡面：title 80%
-    beta_sur=0.2
+    "香菇甘草種植",
+    topk=3,
+    alpha=0.7,        # text 60%, image 40%
+    beta_title=0.7,   # text 裡面：title 80%
+    beta_sur=0.3
 )
 
 open("o.json", "w", encoding="utf-8").write(json.dumps(hits, ensure_ascii=False, indent=2))
-
-# for h in hits:
-#     print(h["score"], h["page"], h["image_path"], h["figure_title"], h["s_title"], h["s_sur"], h["s_img"])
 
