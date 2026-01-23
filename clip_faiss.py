@@ -37,12 +37,16 @@ def chunk_text(text, chunk_size=120, overlap=30):
 # Retriever
 # ----------------------------
 class MultiModalRetriever:
+    text_model_name: str
+    image_model_name: str
     def __init__(
         self,
         text_model_name="google/embeddinggemma-300m",
         image_model_name="clip-ViT-B-32",
     ):
         # models
+        self.text_model_name = text_model_name
+        self.image_model_name = image_model_name
         self.text_model = SentenceTransformer(text_model_name)
         self.image_model = SentenceTransformer(image_model_name)
 
@@ -321,10 +325,93 @@ class MultiModalRetriever:
         results.sort(key=lambda x: x["score"], reverse=True)
         return results[:topk]
 
+    # ----------------------------
+    # Save/Load
+    # ----------------------------
+    @staticmethod
+    def load(
+        db_dir: str,
+        text_model_name="google/embeddinggemma-300m",
+        image_model_name="clip-ViT-B-32",
+    ):
+        """
+        Load a saved MultiModalRetriever database and return a new instance.
+        """
+        
+        cfg_path = os.path.join(db_dir, "config.json")
+        if os.path.exists(cfg_path):
+            with open(cfg_path, "r", encoding="utf-8") as f:
+                cfg = json.load(f)
+            if cfg.get("text_model_name") != text_model_name:
+                print("[WARN] text_model_name does not match saved DB")
+            if cfg.get("image_model_name") != image_model_name:
+                print("[WARN] image_model_name does not match saved DB")
+
+        # 1️⃣ 建立新物件（model 會在 __init__ 初始化）
+        r = MultiModalRetriever(
+            text_model_name=text_model_name,
+            image_model_name=image_model_name,
+        )
+
+        # 2️⃣ Load FAISS indices
+        r.title_index = faiss.read_index(os.path.join(db_dir, "title.faiss"))
+        r.sur_index   = faiss.read_index(os.path.join(db_dir, "sur.faiss"))
+        r.img_index   = faiss.read_index(os.path.join(db_dir, "img.faiss"))
+
+        # 3️⃣ Load vectors / dims
+        data = np.load(os.path.join(db_dir, "vectors.npz"), allow_pickle=True)
+
+        r.v_title = data["v_title"]
+        r.v_img = data["v_img"]
+        r.v_sur_chunks = list(data["v_sur_chunks"])
+        r.sur_chunks_text = list(data["sur_chunks_text"])
+
+        r.text_dim = int(data["text_dim"])
+        r.image_dim = int(data["image_dim"])
+
+        # 4️⃣ Load meta
+        with open(os.path.join(db_dir, "meta.json"), "r", encoding="utf-8") as f:
+            r.meta = json.load(f)
+
+        return r
+
+
+
+    def save(self, db_dir: str):
+        os.makedirs(db_dir, exist_ok=True)
+
+        # --- FAISS indices ---
+        faiss.write_index(self.title_index, os.path.join(db_dir, "title.faiss"))
+        faiss.write_index(self.sur_index,   os.path.join(db_dir, "sur.faiss"))
+        faiss.write_index(self.img_index,   os.path.join(db_dir, "img.faiss"))
+
+        # --- vectors ---
+        np.savez_compressed(
+            os.path.join(db_dir, "vectors.npz"),
+            v_title=self.v_title,
+            v_img=self.v_img,
+            v_sur_chunks=np.array(self.v_sur_chunks, dtype=object),
+            sur_chunks_text=np.array(self.sur_chunks_text, dtype=object),
+            text_dim=self.text_dim,
+            image_dim=self.image_dim,
+        )
+
+        # --- meta ---
+        with open(os.path.join(db_dir, "meta.json"), "w", encoding="utf-8") as f:
+            json.dump(self.meta, f, ensure_ascii=False, indent=2)
+            
+        with open(os.path.join(db_dir, "config.json"), "w", encoding="utf-8") as f:
+            json.dump({
+                "text_model_name": self.text_model_name or "",
+                "image_model_name": self.image_model_name or "",
+            }, f, indent=2)
+
+
 # ===== 用法 =====
-r = MultiModalRetriever()
-r.add_folder("output_stored/L1Vin1RByA/image_datas", n_sur=3)
-r.add_folder("output_stored/43Uk9N1gnY/image_datas", n_sur=3)
+# r = MultiModalRetriever()
+# r.add_folder("output_stored/L1Vin1RByA/image_datas", n_sur=3)
+# r.add_folder("output_stored/43Uk9N1gnY/image_datas", n_sur=3)
+r = MultiModalRetriever.load("db")
 
 hits = r.search(
     "香菇甘草種植",
@@ -335,4 +422,6 @@ hits = r.search(
 )
 
 open("o.json", "w", encoding="utf-8").write(json.dumps(hits, ensure_ascii=False, indent=2))
+
+# r.save("db")
 

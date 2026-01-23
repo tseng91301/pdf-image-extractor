@@ -6,5 +6,6 @@ output/
 output_stored/
 __pycache__/
 env/
+db/
 
 o.json
