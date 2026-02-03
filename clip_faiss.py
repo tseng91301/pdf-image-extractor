@@ -412,16 +412,23 @@ class MultiModalRetriever:
 # r.add_folder("output_stored/L1Vin1RByA/image_datas", n_sur=3)
 # r.add_folder("output_stored/43Uk9N1gnY/image_datas", n_sur=3)
 r = MultiModalRetriever.load("db")
+# 許多螞蟻聚集在水管裡的圖片
+input_text = input("輸入搜索關鍵字: ")
 
 hits = r.search(
-    "香菇甘草種植",
+    input_text,
     topk=3,
     alpha=0.7,        # text 60%, image 40%
     beta_title=0.7,   # text 裡面：title 80%
     beta_sur=0.3
 )
 
+# print("搜索結果如下(列出信心值前三的相關圖片): ")
+for i, hit in enumerate(hits[:3]):
+    print(f"{i+1}. 圖片位置: {hit['image_path']} | 對應文件名稱: {hit['doc_name']} | 信心值: {hit['score']:.2f}")
+
 open("o.json", "w", encoding="utf-8").write(json.dumps(hits, ensure_ascii=False, indent=2))
+print("詳細尋結果已儲存到 o.json 中。")
 
 # r.save("db")
 
