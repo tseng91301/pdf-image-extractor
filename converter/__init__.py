@@ -38,6 +38,7 @@ def match_xref_for_rect(page: fitz.Page, rect_pdf: fitz.Rect):
     return best
 
 class PdfInfo:
+    _layout_model = None  # 用來快取單例的 LayoutDiscovery 模型
     pdf_path: str
     pdf_uid: str
     pdf_name: str
@@ -89,7 +90,10 @@ class PdfInfo:
             self.to_images()
             pass
         self.pdf_layouts = []
-        model = LayoutDetection(model_name="PP-DocLayout_plus-L")
+        if PdfInfo._layout_model is None:
+            print("[PdfInfo] 初始化 LayoutDetection 模型 (PP-DocLayout_plus-L)...")
+            PdfInfo._layout_model = LayoutDetection(model_name="PP-DocLayout_plus-L")
+        model = PdfInfo._layout_model
         for i, img_path in enumerate(self.pdf_img_paths):
             p = model.predict(img_path, batch_size=1, layout_nms=True)
             p[0]['input_img'] = cv2.cvtColor(cv2.imread(img_path), cv2.COLOR_BGR2RGB) # 使用原本擷取出來的圖片
