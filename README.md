@@ -115,7 +115,11 @@ source venv/bin/activate
 ### 步驟 3：安裝依賴
 
 ```bash
-pip install -r requirements.txt
+# CPU
+pip install -r requirements.cpu.txt
+
+# GPU
+pip install -r requirements.gpu.txt
 ```
 
 ### 步驟 4：驗證安裝
@@ -431,13 +435,11 @@ opencv-python                  # 圖像處理
 Pillow                         # 圖片操作
 PyMuPDF                        # PDF 處理
 paddleocr                      # 光學字符識別
-paddlepaddle==3.2.2           # PaddleOCR 後端
+paddlepaddle                   # PaddleOCR 後端
 matplotlib                     # 視覺化
 sentence-transformers          # 語義 embedding
-faiss-cpu                      # 向量搜尋
+faiss                          # 向量搜尋
 ```
-
-> 📌 使用 `pip install -r requirements.txt` 自動安裝所有依賴
 
 ---
 
