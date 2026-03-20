@@ -1,4 +1,6 @@
 example_pdfs/big_images.pdf
+example_pdfs_2/
+
 venv/
 venv2/
 tmp_pages/
@@ -14,3 +16,4 @@ o.json
 pdf_store_ids.json
 
 agriculture_tech_docs
+agriculture_db/

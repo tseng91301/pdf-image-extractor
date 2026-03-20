@@ -1,4 +1,6 @@
 -r requirements.txt
 --extra-index-url https://www.paddlepaddle.org.cn/packages/stable/cu126/
 paddlepaddle-gpu==3.2.0
+--extra-index-url https://download.pytorch.org/whl/cpu
+sentence-transformers
 faiss-gpu-cu12

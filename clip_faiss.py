@@ -41,7 +41,7 @@ class MultiModalRetriever:
     image_model_name: str
     def __init__(
         self,
-        text_model_name="google/embeddinggemma-300m",
+        text_model_name="paraphrase-multilingual-MiniLM-L12-v2",
         image_model_name="clip-ViT-B-32",
     ):
         # models
@@ -331,7 +331,7 @@ class MultiModalRetriever:
     @staticmethod
     def load(
         db_dir: str,
-        text_model_name="google/embeddinggemma-300m",
+        text_model_name="paraphrase-multilingual-MiniLM-L12-v2",
         image_model_name="clip-ViT-B-32",
     ):
         """
@@ -407,28 +407,34 @@ class MultiModalRetriever:
             }, f, indent=2)
 
 
-# ===== 用法 =====
-# r = MultiModalRetriever()
-# r.add_folder("output_stored/L1Vin1RByA/image_datas", n_sur=3)
-# r.add_folder("output_stored/43Uk9N1gnY/image_datas", n_sur=3)
-r = MultiModalRetriever.load("db")
-# 許多螞蟻聚集在水管裡的圖片
-input_text = input("輸入搜索關鍵字: ")
+if __name__ == "__main__":
+    # ===== 用法 =====
+    # r = MultiModalRetriever()
+    # r.add_folder("output_stored/L1Vin1RByA/image_datas", n_sur=3)
+    # r.add_folder("output_stored/43Uk9N1gnY/image_datas", n_sur=3)
+    # r = MultiModalRetriever.load("db")
+    
+    # Check if DB exists, if not, create a placeholder or error
+    if os.path.exists("db"):
+        r = MultiModalRetriever.load("db")
+        # 許多螞蟻聚集在水管裡的圖片
+        input_text = input("輸入搜索關鍵字: ")
+        
+        hits = r.search(
+            input_text,
+            topk=3,
+            alpha=0.7,        # text 70%, image 30%
+            beta_title=0.7,   # text 裡面：title 70%
+            beta_sur=0.3
+        )
+        
+        # print("搜索結果如下(列出信心值前三的相關圖片): ")
+        for i, hit in enumerate(hits[:3]):
+            print(f"{i+1}. 圖片位置: {hit['image_path']} | 對應文件名稱: {hit['doc_name']} | 信心值: {hit['score']:.2f}")
+        
+        open("o.json", "w", encoding="utf-8").write(json.dumps(hits, ensure_ascii=False, indent=2))
+        print("詳細尋結果已儲存到 o.json 中。")
+    else:
+        print("資料庫 'db' 不存在，請先運行索引腳本。")
 
-hits = r.search(
-    input_text,
-    topk=3,
-    alpha=0.7,        # text 60%, image 40%
-    beta_title=0.7,   # text 裡面：title 80%
-    beta_sur=0.3
-)
-
-# print("搜索結果如下(列出信心值前三的相關圖片): ")
-for i, hit in enumerate(hits[:3]):
-    print(f"{i+1}. 圖片位置: {hit['image_path']} | 對應文件名稱: {hit['doc_name']} | 信心值: {hit['score']:.2f}")
-
-open("o.json", "w", encoding="utf-8").write(json.dumps(hits, ensure_ascii=False, indent=2))
-print("詳細尋結果已儲存到 o.json 中。")
-
-# r.save("db")
 

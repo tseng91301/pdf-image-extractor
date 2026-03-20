@@ -3,7 +3,7 @@ import json
 
 from converter import PdfInfo
 
-PDF_STORE_PATH = "./testing_pdfs"
+PDF_STORE_PATH = "./example_pdfs"
 def get_pdf_files(directory):
     pdf_files = []
     # 遍歷目錄中的所有檔案
@@ -21,7 +21,7 @@ for pdf_file in pdf_files:
     pdf_store_ids.append(pdf.pdf_uid)
     pdf.to_images(dpi=300)
     pdf.label_layout()
-    pdf.label_images(optimize_resolution=True, optimize_dpi=400)
+    pdf.label_images(optimize_resolution=True, optimize_dpi=400, use_xref=False)
     pdf.extract_image_description(export=True)
     
 with open("pdf_store_ids.json", "w", encoding="utf-8") as f:

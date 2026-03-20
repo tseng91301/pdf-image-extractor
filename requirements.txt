@@ -3,5 +3,4 @@ opencv-python
 Pillow
 PyMuPDF
 paddleocr
-matplotlib
-sentence-transformers
+matplotlib==3.10.8
