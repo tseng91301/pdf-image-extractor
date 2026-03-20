@@ -1,0 +1,1 @@
+ln -s /home/nas2/Workspace/Jesse/LLM/organized_pdf ./agriculture_tech_docs
