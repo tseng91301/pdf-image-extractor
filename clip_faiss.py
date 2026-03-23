@@ -415,8 +415,9 @@ if __name__ == "__main__":
     # r = MultiModalRetriever.load("db")
     
     # Check if DB exists, if not, create a placeholder or error
-    if os.path.exists("db"):
-        r = MultiModalRetriever.load("db")
+    DB_PATH = "agriculture_db"
+    if os.path.exists(DB_PATH):
+        r = MultiModalRetriever.load(DB_PATH)
         # 許多螞蟻聚集在水管裡的圖片
         input_text = input("輸入搜索關鍵字: ")
         

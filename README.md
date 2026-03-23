@@ -2,6 +2,8 @@
 
 **PDF Image Extraction & Caption Inference System**
 
+2026/03/20 22:30:00 開始運行資料建檔
+
 ## 📋 目錄
 
 - [專案簡介](#專案簡介)
