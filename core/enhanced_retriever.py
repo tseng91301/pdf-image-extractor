@@ -1,8 +1,38 @@
 import jieba
 import jieba.analyse
-from clip_faiss import MultiModalRetriever
+import re
+from .retriever import MultiModalRetriever
 
 class EnhancedMultiModalRetriever(MultiModalRetriever):
+    def add_document(self, json_path: str, images_dir: str, n_sur=3, doc_name_override=None, chunk_size=20, overlap=4):
+        # 紀錄原本的 meta 長度，以便知道這批加了哪些
+        start_idx = len(self.meta)
+        
+        # 1. 讓父類別正常完成所有的抽取與 embedding 插入
+        count = super().add_document(json_path, images_dir, n_sur, doc_name_override, chunk_size, overlap)
+        
+        if count == 0:
+            return 0
+            
+        # 2. 針對剛剛新增的資料（最後 count 筆），即時補上關鍵字計算
+        special_pattern = re.compile(r'[\u4e00-\u9fa5]{1,4}(?:病|蟲|害|菌|蛾|蟎|蝨|蠅|蝶|農藥|肥料)')
+        
+        for idx in range(start_idx, len(self.meta)):
+            item = self.meta[idx]
+            text_source = item.get("figure_title", "") + " "
+            text_source += " ".join(item.get("sur_text_list", []))
+            text_source = text_source.strip()
+            
+            if not text_source:
+                item["keywords"] = []
+                continue
+                
+            jieba_keywords = jieba.analyse.extract_tags(text_source, topK=8, allowPOS=('n', 'nz', 'vn', 'ns'))
+            special_matches = special_pattern.findall(text_source)
+            item["keywords"] = list(set(jieba_keywords + special_matches))
+            
+        return count
+
     def search(
         self,
         query: str,
