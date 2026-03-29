@@ -4,6 +4,7 @@ Pillow
 PyMuPDF
 paddleocr
 matplotlib==3.10.8
+jieba
 
 # Server
 fastapi
