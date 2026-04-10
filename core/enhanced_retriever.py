@@ -1,7 +1,5 @@
-import jieba
-import jieba.analyse
-import re
 from .retriever import MultiModalRetriever
+from .nlp_utils import extract_keywords
 
 class EnhancedMultiModalRetriever(MultiModalRetriever):
     def add_document(self, json_path: str, images_dir: str, n_sur=3, doc_name_override=None, chunk_size=20, overlap=4):
@@ -15,21 +13,13 @@ class EnhancedMultiModalRetriever(MultiModalRetriever):
             return 0
             
         # 2. 針對剛剛新增的資料（最後 count 筆），即時補上關鍵字計算
-        special_pattern = re.compile(r'[\u4e00-\u9fa5]{1,4}(?:病|蟲|害|菌|蛾|蟎|蝨|蠅|蝶|農藥|肥料)')
-        
         for idx in range(start_idx, len(self.meta)):
             item = self.meta[idx]
             text_source = item.get("figure_title", "") + " "
             text_source += " ".join(item.get("sur_text_list", []))
             text_source = text_source.strip()
             
-            if not text_source:
-                item["keywords"] = []
-                continue
-                
-            jieba_keywords = jieba.analyse.extract_tags(text_source, topK=8, allowPOS=('n', 'nz', 'vn', 'ns'))
-            special_matches = special_pattern.findall(text_source)
-            item["keywords"] = list(set(jieba_keywords + special_matches))
+            item["keywords"] = extract_keywords(text_source, topK=8)
             
         return count
 
@@ -41,7 +31,7 @@ class EnhancedMultiModalRetriever(MultiModalRetriever):
         alpha=0.6,
         beta_title=0.7,
         beta_sur=0.3,
-        gamma_keyword=0.15 # 關鍵字額外加權的分數佔比 (可根據需要微調)
+        gamma_keyword=0.4 # 關鍵字額外加權的分數佔比 (可根據需要微調)
     ):
         # 1. 先用原本的 FAISS 執行向量檢索 (取更多候選名單來做關鍵字重新排序)
         base_hits = super().search(
@@ -54,9 +44,10 @@ class EnhancedMultiModalRetriever(MultiModalRetriever):
         )
         
         # 2. 針對使用者的 query 提取關鍵字
-        query_keywords = jieba.analyse.extract_tags(query, topK=5)
+        query_keywords = extract_keywords(query, topK=5)
         if len(query_keywords) == 0:
             # 如果句子太短提不出關鍵字，退回一般的斷詞
+            import jieba
             query_keywords = jieba.lcut(query)
             
         q_set = set(query_keywords)
