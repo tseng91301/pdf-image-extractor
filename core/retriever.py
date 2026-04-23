@@ -5,6 +5,7 @@ import faiss
 import jieba
 from sentence_transformers import SentenceTransformer
 from .nlp_utils import extract_keywords
+from .translator import OfflineTranslator
 
 
 # ----------------------------
@@ -45,12 +46,16 @@ class MultiModalRetriever:
         self,
         text_model_name="paraphrase-multilingual-MiniLM-L12-v2",
         image_model_name="clip-ViT-B-32",
+        use_translation=True,
     ):
         # models
         self.text_model_name = text_model_name
         self.image_model_name = image_model_name
         self.text_model = SentenceTransformer(text_model_name)
         self.image_model = SentenceTransformer(image_model_name)
+
+        # translator
+        self.translator = OfflineTranslator() if use_translation else None
 
         # FAISS indices
         self.title_index = None     # text
@@ -300,6 +305,13 @@ class MultiModalRetriever:
         else:
             beta_title, beta_content, beta_keyword = 1/3, 1/3, 1/3
 
+        # Translate query if needed (especially for CLIP/image search)
+        search_query_en = query
+        if self.translator:
+            search_query_en = self.translator.translate(query)
+            if search_query_en != query:
+                print(f"[Search] Translated query: '{query}' -> '{search_query_en}'")
+
         # encode query
         q_text = self.text_model.encode(
             [query],
@@ -308,7 +320,7 @@ class MultiModalRetriever:
         ).astype("float32")
 
         q_img = self.image_model.encode(
-            [query],
+            [search_query_en],
             convert_to_numpy=True,
             normalize_embeddings=True,
         ).astype("float32")
@@ -381,6 +393,7 @@ class MultiModalRetriever:
         db_dir: str,
         text_model_name="paraphrase-multilingual-MiniLM-L12-v2",
         image_model_name="clip-ViT-B-32",
+        use_translation=True,
     ):
         """
         Load a saved MultiModalRetriever database and return a new instance.
@@ -399,6 +412,7 @@ class MultiModalRetriever:
         r = MultiModalRetriever(
             text_model_name=text_model_name,
             image_model_name=image_model_name,
+            use_translation=use_translation,
         )
 
         # 2️⃣ Load FAISS indices

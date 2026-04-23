@@ -11,3 +11,9 @@ fastapi
 uvicorn
 jinja2
 python-multipart
+
+# NLP & AI
+transformers
+torch
+sacremoses
+sentencepiece
