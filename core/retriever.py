@@ -268,18 +268,37 @@ class MultiModalRetriever:
         query: str,
         topk=10,
         k_each=50,
-        alpha=0.6,
-        beta_title=0.7,
-        beta_sur=0.3,
-        gamma_keyword=0.4, # Weight for keyword matching (0.0 to disable)
+        w_text=0.7,
+        w_image=0.3,
+        w_title=0.5,
+        w_content=0.3,
+        w_keyword=0.2,
     ):
         if self.title_index is None:
             raise RuntimeError("Index not built")
 
-        # normalize weights
-        s = beta_title + beta_sur
-        beta_title /= s
-        beta_sur /= s
+        # Extract query keywords
+        query_keywords = extract_keywords(query, topK=5)
+        if len(query_keywords) == 0:
+            query_keywords = jieba.lcut(query)
+        q_set = set(query_keywords)
+
+        # Normalize Category weights
+        s_cat = w_text + w_image
+        if s_cat > 0:
+            alpha_text = w_text / s_cat
+            alpha_image = w_image / s_cat
+        else:
+            alpha_text, alpha_image = 0.5, 0.5
+
+        # Normalize Sub-category weights
+        s_sub = w_title + w_content + w_keyword
+        if s_sub > 0:
+            beta_title = w_title / s_sub
+            beta_content = w_content / s_sub
+            beta_keyword = w_keyword / s_sub
+        else:
+            beta_title, beta_content, beta_keyword = 1/3, 1/3, 1/3
 
         # encode query
         q_text = self.text_model.encode(
@@ -294,18 +313,20 @@ class MultiModalRetriever:
             normalize_embeddings=True,
         ).astype("float32")
 
-        # recall (if gamma_keyword > 0, recall more for re-ranking)
-        k_recall = max(topk * 3, k_each) if gamma_keyword > 0 else k_each
-        _, It = self.title_index.search(q_text, k_recall)
-        _, Is = self.sur_index.search(q_text, k_recall)
-        _, Ii = self.img_index.search(q_img, k_recall)
+        # recall
+        # We always recall from all indices
+        _, It = self.title_index.search(q_text, k_each)
+        _, Is = self.sur_index.search(q_text, k_each)
+        _, Ii = self.img_index.search(q_img, k_each)
 
         cand = set(It[0]) | set(Is[0]) | set(Ii[0])
 
         results = []
         for idx in cand:
+            # 1. Title Score
             s_title = float(np.dot(q_text[0], self.v_title[idx]))
 
+            # 2. Surrounding/Content Score
             v_chunks = self.v_sur_chunks[idx]
             if v_chunks.shape[0] == 0:
                 s_sur = 0.0
@@ -316,44 +337,41 @@ class MultiModalRetriever:
                 s_sur = float(scores[best_i])
                 best_chunk = self.sur_chunks_text[idx][best_i]
 
+            # 3. Keyword Score
+            m = self.meta[idx]
+            doc_keywords = m.get("keywords", [])
+            doc_set = set(doc_keywords)
+            intersection = q_set.intersection(doc_set)
+            s_keyword = len(intersection) / len(q_set) if len(q_set) > 0 else 0.0
+
+            # 4. Image Score
             s_img = float(np.dot(q_img[0], self.v_img[idx]))
 
-            s_text = beta_title * s_title + beta_sur * s_sur
-            score = alpha * s_text + (1 - alpha) * s_img
+            # Combine Text Score
+            s_text_combined = beta_title * s_title + beta_content * s_sur + beta_keyword * s_keyword
+            
+            # Final Score
+            score = alpha_text * s_text_combined + alpha_image * s_img
 
-            m = self.meta[idx]
             hit = {
                 "score": score,
-                "s_text": s_text,
+                "s_text": s_text_combined,
                 "s_title": s_title,
                 "s_sur": s_sur,
+                "s_keyword": s_keyword,
                 "s_img": s_img,
                 "best_sur_chunk": best_chunk,
+                "matched_keywords": list(intersection),
                 **m,
             }
-            
-            # --- keyword re-ranking ---
-            if gamma_keyword > 0:
-                query_keywords = extract_keywords(query, topK=5)
-                if len(query_keywords) == 0:
-                    query_keywords = jieba.lcut(query)
-                
-                q_set = set(query_keywords)
-                doc_keywords = m.get("keywords", [])
-                doc_set = set(doc_keywords)
-                
-                intersection = q_set.intersection(doc_set)
-                keyword_score = len(intersection) / len(q_set) if len(q_set) > 0 else 0.0
-                
-                hit["s_keyword"] = keyword_score
-                hit["matched_keywords"] = list(intersection)
-                # Combine score
-                hit["score"] = (hit["score"] * (1 - gamma_keyword)) + (keyword_score * gamma_keyword)
-            
             results.append(hit)
 
         results.sort(key=lambda x: x["score"], reverse=True)
-        return results[:topk]
+        
+        return {
+            "query_keywords": query_keywords,
+            "results": results[:topk]
+        }
 
     # ----------------------------
     # Save/Load
@@ -451,13 +469,16 @@ if __name__ == "__main__":
         # 許多螞蟻聚集在水管裡的圖片
         input_text = input("輸入搜索關鍵字: ")
         
-        hits = r.search(
+        output = r.search(
             input_text,
             topk=3,
-            alpha=0.7,        # text 70%, image 30%
-            beta_title=0.7,   # text 裡面：title 70%
-            beta_sur=0.3
+            w_text=0.7,
+            w_image=0.3,
+            w_title=0.7,
+            w_content=0.3,
+            w_keyword=0.2
         )
+        hits = output["results"]
         
         # print("搜索結果如下(列出信心值前三的相關圖片): ")
         for i, hit in enumerate(hits[:3]):

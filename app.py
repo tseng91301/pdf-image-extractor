@@ -49,22 +49,26 @@ async def read_index(request: Request):
 async def search_api(
     q: str, 
     topk: int = 10,
-    alpha: float = 0.7,
-    beta_title: float = 0.7,
-    beta_sur: float = 0.3
+    w_text: float = 0.7,
+    w_image: float = 0.3,
+    w_title: float = 0.5,
+    w_content: float = 0.3,
+    w_keyword: float = 0.2
 ):
     if not retriever:
         return {"error": "Database not initialized. Please ensure the database exists at startup."}
     
     try:
-        hits = retriever.search(
+        results = retriever.search(
             q,
             topk=topk,
-            alpha=alpha,
-            beta_title=beta_title,
-            beta_sur=beta_sur
+            w_text=w_text,
+            w_image=w_image,
+            w_title=w_title,
+            w_content=w_content,
+            w_keyword=w_keyword
         )
-        return {"results": hits}
+        return results
     except Exception as e:
         return {"error": str(e)}
 

@@ -454,20 +454,42 @@
         </div>
 
         <div class="advanced-settings">
-            <div class="setting-group" title="決定文字與影像比重 (1.0=全文字, 0.0=全影像)">
-                <label>Alpha (文字比重):</label>
-                <input type="range" id="alphaRange" min="0" max="1" step="0.01" value="0.7" oninput="document.getElementById('alphaInput').value = this.value">
-                <input type="number" id="alphaInput" min="0" max="1" step="0.01" value="0.7" oninput="document.getElementById('alphaRange').value = this.value">
+            <div style="width: 100%; margin-bottom: 1rem; font-weight: 700; color: var(--primary-color); display: flex; align-items: center; gap: 0.5rem;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                進階權重設定
             </div>
-            <div class="setting-group" title="決定文字分數中標題的比重">
-                <label>Beta Title (標題比重):</label>
-                <input type="range" id="betaTitleRange" min="0" max="1" step="0.01" value="0.7" oninput="document.getElementById('betaTitleInput').value = this.value">
-                <input type="number" id="betaTitleInput" min="0" max="1" step="0.01" value="0.7" oninput="document.getElementById('betaTitleRange').value = this.value">
+            
+            <!-- Category Weights -->
+            <div style="width: 100%; display: flex; flex-wrap: wrap; gap: 1.5rem; padding-bottom: 1rem; border-bottom: 1px dashed var(--border-color);">
+                <div class="setting-group" title="影像特徵權重">
+                    <label>影像權重:</label>
+                    <input type="range" id="wImageRange" min="0" max="1" step="0.1" value="0.3" oninput="document.getElementById('wImageInput').value = this.value">
+                    <input type="number" id="wImageInput" min="0" max="1" step="0.1" value="0.3" oninput="document.getElementById('wImageRange').value = this.value">
+                </div>
+                <div class="setting-group" title="文字特徵權重 (包含標題、內文、關鍵字)">
+                    <label>文字權重:</label>
+                    <input type="range" id="wTextRange" min="0" max="1" step="0.1" value="0.7" oninput="document.getElementById('wTextInput').value = this.value">
+                    <input type="number" id="wTextInput" min="0" max="1" step="0.1" value="0.7" oninput="document.getElementById('wTextRange').value = this.value">
+                </div>
             </div>
-            <div class="setting-group" title="決定文字分數中內文的比重">
-                <label>Beta Sur (內文比重):</label>
-                <input type="range" id="betaSurRange" min="0" max="1" step="0.01" value="0.3" oninput="document.getElementById('betaSurInput').value = this.value">
-                <input type="number" id="betaSurInput" min="0" max="1" step="0.01" value="0.3" oninput="document.getElementById('betaSurRange').value = this.value">
+
+            <!-- Text Component Weights -->
+            <div style="width: 100%; display: flex; flex-wrap: wrap; gap: 1.5rem; margin-top: 1rem;">
+                <div class="setting-group" title="標題權重">
+                    <label>標題:</label>
+                    <input type="range" id="wTitleRange" min="0" max="1" step="0.1" value="0.5" oninput="document.getElementById('wTitleInput').value = this.value">
+                    <input type="number" id="wTitleInput" min="0" max="1" step="0.1" value="0.5" oninput="document.getElementById('wTitleRange').value = this.value">
+                </div>
+                <div class="setting-group" title="內文權重">
+                    <label>內文:</label>
+                    <input type="range" id="wContentRange" min="0" max="1" step="0.1" value="0.3" oninput="document.getElementById('wContentInput').value = this.value">
+                    <input type="number" id="wContentInput" min="0" max="1" step="0.1" value="0.3" oninput="document.getElementById('wContentRange').value = this.value">
+                </div>
+                <div class="setting-group" title="關鍵字權重">
+                    <label>關鍵字:</label>
+                    <input type="range" id="wKeywordRange" min="0" max="1" step="0.1" value="0.2" oninput="document.getElementById('wKeywordInput').value = this.value">
+                    <input type="number" id="wKeywordInput" min="0" max="1" step="0.1" value="0.2" oninput="document.getElementById('wKeywordRange').value = this.value">
+                </div>
             </div>
         </div>
     </div>
@@ -475,6 +497,17 @@
     <div class="loader-container" id="loaderContainer">
         <div class="loader"></div>
         <div class="loader-text">正在搜尋 RAG 資料庫...</div>
+    </div>
+
+    <!-- Query Keywords Section -->
+    <div id="queryKeywordsContainer" style="display: none; width: 90%; max-width: 1400px; margin-bottom: 1.5rem; background: #fff; padding: 1rem 1.5rem; border-radius: 1rem; box-shadow: var(--box-shadow); border-left: 5px solid var(--accent-color);">
+        <div style="font-weight: 700; font-size: 0.9rem; color: var(--secondary-color); margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+            提取到的查詢關鍵字:
+        </div>
+        <div id="queryKeywordTags" style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
+            <!-- Keywords will be injected here -->
+        </div>
     </div>
 
     <div class="results-grid" id="resultsGrid">
@@ -496,26 +529,51 @@
         async function performSearch() {
             const query = document.getElementById('searchInput').value.trim();
             const topk = document.getElementById('topkInput').value || 10;
-            const alpha = document.getElementById('alphaInput').value || 0.7;
-            const betaTitle = document.getElementById('betaTitleInput').value || 0.7;
-            const betaSur = document.getElementById('betaSurInput').value || 0.3;
+            
+            // Get weight values
+            const wText = document.getElementById('wTextInput').value || 0.7;
+            const wImage = document.getElementById('wImageInput').value || 0.3;
+            const wTitle = document.getElementById('wTitleInput').value || 0.5;
+            const wContent = document.getElementById('wContentInput').value || 0.3;
+            const wKeyword = document.getElementById('wKeywordInput').value || 0.2;
             
             const grid = document.getElementById('resultsGrid');
             const loader = document.getElementById('loaderContainer');
+            const kwContainer = document.getElementById('queryKeywordsContainer');
+            const kwTags = document.getElementById('queryKeywordTags');
 
             if (!query) return;
 
             grid.innerHTML = '';
+            kwContainer.style.display = 'none';
             loader.style.display = 'flex';
 
             try {
-                const response = await fetch(`/search?q=${encodeURIComponent(query)}&topk=${topk}&alpha=${alpha}&beta_title=${betaTitle}&beta_sur=${betaSur}`);
+                const params = new URLSearchParams({
+                    q: query,
+                    topk: topk,
+                    w_text: wText,
+                    w_image: wImage,
+                    w_title: wTitle,
+                    w_content: wContent,
+                    w_keyword: wKeyword
+                });
+                
+                const response = await fetch(`/search?${params.toString()}`);
                 const data = await response.json();
                 loader.style.display = 'none';
 
                 if (data.error) {
                     grid.innerHTML = `<div style="grid-column: 1/-1; background: #fee2e2; color: #b91c1c; padding: 1.5rem; border-radius: 0.75rem; text-align: center; font-weight: 500;">錯誤: ${data.error}</div>`;
                     return;
+                }
+
+                // Display Query Keywords
+                if (data.query_keywords && data.query_keywords.length > 0) {
+                    kwContainer.style.display = 'block';
+                    kwTags.innerHTML = data.query_keywords.map(kw => 
+                        `<span style="background: #ecfdf5; color: #065f46; padding: 0.25rem 0.75rem; border-radius: 999px; font-size: 0.85rem; font-weight: 600; border: 1px solid #a7f3d0;">${kw}</span>`
+                    ).join('');
                 }
 
                 if (data.results.length === 0) {
@@ -529,14 +587,28 @@
                     card.style.animationDelay = `${index * 0.05}s`;
 
                     let imgUrl = `/${item.image_path}`;
-                    // If image_path starts with 'output/' we use it directly, else fallback
-                    
                     const pdfPath = item.doc_name;
-                    // The PDF is loaded from /agriculture_tech_docs/
                     const fullPdfUrl = `/agriculture_tech_docs/${pdfPath}#page=${item.page}`;
 
                     // Extract best_sur_chunk for brief preview
                     const snippet = item.best_sur_chunk ? `<div style="font-size: 0.85rem; color: #475569; margin-top: 0.5rem; background: #f1f5f9; padding: 0.5rem; border-radius: 0.5rem; border-left: 3px solid #3b82f6;"><i>"...${item.best_sur_chunk}..."</i></div>` : '';
+
+                    // Matched keywords tags
+                    const matchedTags = item.matched_keywords && item.matched_keywords.length > 0 
+                        ? `<div style="margin-top: 0.5rem; display: flex; flex-wrap: wrap; gap: 0.35rem;">
+                             ${item.matched_keywords.map(kw => `<span style="background: #dcfce7; color: #166534; font-size: 0.75rem; padding: 0.1rem 0.5rem; border-radius: 4px; font-weight: 600;">${kw}</span>`).join('')}
+                           </div>` 
+                        : '';
+                    
+                    // All doc keywords
+                    const docKeywords = item.keywords && item.keywords.length > 0
+                        ? `<div style="margin-top: 0.75rem; border-top: 1px solid #f1f5f9; padding-top: 0.5rem;">
+                             <div style="font-size: 0.75rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.25rem;">圖片關鍵字:</div>
+                             <div style="display: flex; flex-wrap: wrap; gap: 0.25rem;">
+                               ${item.keywords.map(kw => `<span style="color: #64748b; font-size: 0.75rem;">#${kw}</span>`).join(' ')}
+                             </div>
+                           </div>`
+                        : '';
 
                     card.innerHTML = `
                         <div class="rank-badge">#${index + 1}</div>
@@ -548,13 +620,18 @@
                             <div class="doc-meta">
                                 <div><span class="highlight-text">文件:</span> ${item.doc_name.split('/').pop()}</div>
                                 <div style="margin-top: 0.25rem;"><span class="highlight-text">頁面:</span> 第 ${item.page} 頁</div>
+                                ${matchedTags}
                                 ${snippet}
+                                ${docKeywords}
                             </div>
                             <div class="score-info">
                                 <b>總分 (score): ${(item.score).toFixed(4)}</b>
-                                <span>文本 (s_text): ${(item.s_text).toFixed(4)}</span>
-                                <span>標題 (s_title): ${(item.s_title).toFixed(4)}</span>
-                                <span>內文 (s_sur): ${(item.s_sur).toFixed(4)}</span>
+                                <span>文本總分 (s_text): ${(item.s_text).toFixed(4)}</span>
+                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 4px; padding-left: 8px; border-left: 2px solid #e2e8f0; margin: 4px 0;">
+                                    <span style="font-size: 0.75rem;">└ 標題: ${(item.s_title).toFixed(4)}</span>
+                                    <span style="font-size: 0.75rem;">└ 內文: ${(item.s_sur).toFixed(4)}</span>
+                                    <span style="font-size: 0.75rem;">└ 關鍵字: ${(item.s_keyword).toFixed(4)}</span>
+                                </div>
                                 <span>影像 (s_img): ${(item.s_img).toFixed(4)}</span>
                             </div>
                             <button class="preview-btn" onclick="openModal('${encodeURIComponent(pdfPath)}', ${item.page}, '${item.doc_name.split('/').pop()}')">
