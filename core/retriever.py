@@ -1,4 +1,4 @@
-import os, json, re
+import os, json, re, torch
 import numpy as np
 from PIL import Image
 import faiss
@@ -47,15 +47,26 @@ class MultiModalRetriever:
         text_model_name="paraphrase-multilingual-MiniLM-L12-v2",
         image_model_name="clip-ViT-B-32",
         use_translation=True,
+        device=None,
     ):
+        # device selection
+        if device is None:
+            if torch.cuda.is_available():
+                self.device = "cuda"
+            else:
+                self.device = "cpu"
+                print("\033[93m[WARNING] [Retriever] CUDA is not available. Falling back to CPU.\033[0m")
+        else:
+            self.device = device
+
         # models
         self.text_model_name = text_model_name
         self.image_model_name = image_model_name
-        self.text_model = SentenceTransformer(text_model_name)
-        self.image_model = SentenceTransformer(image_model_name)
+        self.text_model = SentenceTransformer(text_model_name, device=self.device)
+        self.image_model = SentenceTransformer(image_model_name, device=self.device)
 
         # translator
-        self.translator = OfflineTranslator() if use_translation else None
+        self.translator = OfflineTranslator(device=self.device) if use_translation else None
 
         # FAISS indices
         self.title_index = None     # text
@@ -394,6 +405,7 @@ class MultiModalRetriever:
         text_model_name="paraphrase-multilingual-MiniLM-L12-v2",
         image_model_name="clip-ViT-B-32",
         use_translation=True,
+        device=None,
     ):
         """
         Load a saved MultiModalRetriever database and return a new instance.
@@ -413,6 +425,7 @@ class MultiModalRetriever:
             text_model_name=text_model_name,
             image_model_name=image_model_name,
             use_translation=use_translation,
+            device=device,
         )
 
         # 2️⃣ Load FAISS indices

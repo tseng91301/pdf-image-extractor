@@ -5,6 +5,7 @@ import cv2
 import json
 import numpy as np
 
+import paddle
 from paddleocr import LayoutDetection
 
 from .tools import random_uid
@@ -51,13 +52,23 @@ class PdfInfo:
     
     pdf_layouts = []
     pdf_imgdatas = []
-    def __init__(self, pdf_path, gpu=False):
+    def __init__(self, pdf_path, gpu=None):
         self.pdf_path = pdf_path
         self.pdf_uid = random_uid.generate()
         self.tmp_files_path = os.path.join(self.tmp_files_path, self.pdf_uid)
         self.pdf_name = os.path.splitext(os.path.basename(self.pdf_path))[0]
         os.makedirs(self.tmp_files_path, exist_ok=True)
         self.pdf_doc = fitz.open(self.pdf_path)
+        
+        # GPU Check
+        if gpu is None:
+            gpu = paddle.device.is_compiled_with_cuda()
+            if not gpu:
+                print("\033[93m[WARNING] [PdfInfo] CUDA is not available. Falling back to CPU.\033[0m")
+        elif gpu and not paddle.device.is_compiled_with_cuda():
+            print("\033[93m[WARNING] [PdfInfo] GPU requested but CUDA is not available. Falling back to CPU.\033[0m")
+            gpu = False
+            
         self.use_gpu = gpu
         
     def to_images(self, dpi: int = 100, get_output_path: bool = False):

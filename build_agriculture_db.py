@@ -62,7 +62,7 @@ def build_agriculture_database():
             pdf.label_images(optimize_resolution=True, optimize_dpi=400, use_xref=False)
             pdf.extract_image_description(export=False)
             
-            output_dir = f"output/{pdf.pdf_uid}/image_datas"
+            output_dir = f"output1/{pdf.pdf_uid}/image_datas"
             pdf.export_all_image_datas(output_dir)
             
             indexed_count = retriever.add_folder(output_dir, doc_name_override=rel_path)

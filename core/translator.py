@@ -9,11 +9,14 @@ class OfflineTranslator:
         預設使用 Helsinki-NLP/opus-mt-zh-en 模型。
         """
         if device is None:
-            self.device = "cuda" if torch.cuda.is_available() else "cpu"
-            print(f"[Translator] No device specified, using default device: {self.device}")
+            if torch.cuda.is_available():
+                self.device = "cuda"
+            else:
+                self.device = "cpu"
+                print("\033[93m[WARNING] [Translator] CUDA is not available. Falling back to CPU. This may be slow.\033[0m")
         else:
-            print(f"[Translator] Using device: {device}")
             self.device = device
+            print(f"[Translator] Using specified device: {self.device}")
             
         print(f"[Translator] Loading model {model_name} on device {self.device}...")
         self.tokenizer = AutoTokenizer.from_pretrained(model_name)

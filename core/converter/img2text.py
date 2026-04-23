@@ -1,5 +1,6 @@
 import numpy as np
 from PIL import Image
+import paddle
 from paddleocr import PaddleOCR
 
 class ImgOcr:
@@ -11,7 +12,16 @@ class ImgOcr:
     extracted_text: str
     result = None
 
-    def __init__(self, imgInput: np.ndarray, nl=False, gpu=False):
+    def __init__(self, imgInput: np.ndarray, nl=False, gpu=None):
+        # 預設行為：如果未指定 gpu，優先嘗試使用 gpu
+        if gpu is None:
+            gpu = paddle.device.is_compiled_with_cuda()
+            if not gpu:
+                 print("\033[93m[WARNING] [ImgOcr] CUDA is not available for PaddleOCR. Falling back to CPU.\033[0m")
+        elif gpu and not paddle.device.is_compiled_with_cuda():
+             print("\033[93m[WARNING] [ImgOcr] GPU requested but CUDA is not available for PaddleOCR. Falling back to CPU.\033[0m")
+             gpu = False
+
         # 取得對應的模型實例
         ocr = self._get_ocr(gpu)
         
