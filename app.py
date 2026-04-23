@@ -5,7 +5,7 @@ from fastapi.templating import Jinja2Templates
 import uvicorn
 import os
 
-from core.enhanced_retriever import EnhancedMultiModalRetriever as MultiModalRetriever
+from core.retriever import MultiModalRetriever
 
 from contextlib import asynccontextmanager
 

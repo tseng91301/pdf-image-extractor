@@ -2,7 +2,9 @@ import os, json, re
 import numpy as np
 from PIL import Image
 import faiss
+import jieba
 from sentence_transformers import SentenceTransformer
+from .nlp_utils import extract_keywords
 
 
 # ----------------------------
@@ -119,7 +121,7 @@ class MultiModalRetriever:
             image_paths.append(png_path)
             sur_chunks_text_list.append(sur_chunks)
 
-            new_meta.append({
+            meta_item = {
                 "doc_name": doc_name_override or data.get("name"),
                 "uid": data.get("uid"),
                 "page": it.get("page"),
@@ -129,7 +131,13 @@ class MultiModalRetriever:
                 "figure_title": fig_title,
                 "sur_text_list": sur_list,
                 "sur_chunks_used": sur_chunks,
-            })
+            }
+            
+            # --- keyword extraction ---
+            text_source = (fig_title + " " + " ".join(sur_list)).strip()
+            meta_item["keywords"] = extract_keywords(text_source, topK=8)
+            
+            new_meta.append(meta_item)
 
         if not image_paths:
             return 0
@@ -263,6 +271,7 @@ class MultiModalRetriever:
         alpha=0.6,
         beta_title=0.7,
         beta_sur=0.3,
+        gamma_keyword=0.4, # Weight for keyword matching (0.0 to disable)
     ):
         if self.title_index is None:
             raise RuntimeError("Index not built")
@@ -285,10 +294,11 @@ class MultiModalRetriever:
             normalize_embeddings=True,
         ).astype("float32")
 
-        # recall
-        _, It = self.title_index.search(q_text, k_each)
-        _, Is = self.sur_index.search(q_text, k_each)
-        _, Ii = self.img_index.search(q_img, k_each)
+        # recall (if gamma_keyword > 0, recall more for re-ranking)
+        k_recall = max(topk * 3, k_each) if gamma_keyword > 0 else k_each
+        _, It = self.title_index.search(q_text, k_recall)
+        _, Is = self.sur_index.search(q_text, k_recall)
+        _, Ii = self.img_index.search(q_img, k_recall)
 
         cand = set(It[0]) | set(Is[0]) | set(Ii[0])
 
@@ -312,7 +322,7 @@ class MultiModalRetriever:
             score = alpha * s_text + (1 - alpha) * s_img
 
             m = self.meta[idx]
-            results.append({
+            hit = {
                 "score": score,
                 "s_text": s_text,
                 "s_title": s_title,
@@ -320,7 +330,27 @@ class MultiModalRetriever:
                 "s_img": s_img,
                 "best_sur_chunk": best_chunk,
                 **m,
-            })
+            }
+            
+            # --- keyword re-ranking ---
+            if gamma_keyword > 0:
+                query_keywords = extract_keywords(query, topK=5)
+                if len(query_keywords) == 0:
+                    query_keywords = jieba.lcut(query)
+                
+                q_set = set(query_keywords)
+                doc_keywords = m.get("keywords", [])
+                doc_set = set(doc_keywords)
+                
+                intersection = q_set.intersection(doc_set)
+                keyword_score = len(intersection) / len(q_set) if len(q_set) > 0 else 0.0
+                
+                hit["s_keyword"] = keyword_score
+                hit["matched_keywords"] = list(intersection)
+                # Combine score
+                hit["score"] = (hit["score"] * (1 - gamma_keyword)) + (keyword_score * gamma_keyword)
+            
+            results.append(hit)
 
         results.sort(key=lambda x: x["score"], reverse=True)
         return results[:topk]

@@ -1,7 +1,7 @@
 import os
 import json
 from core.converter import PdfInfo
-from core.enhanced_retriever import EnhancedMultiModalRetriever as MultiModalRetriever
+from core.retriever import MultiModalRetriever
 
 # 設定路徑
 SOURCE_DIR = "agriculture_tech_docs"
