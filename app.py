@@ -1,9 +1,11 @@
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, File, UploadFile
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 import uvicorn
 import os
+import io
+from PIL import Image
 
 from core.retriever import MultiModalRetriever
 
@@ -68,6 +70,25 @@ async def search_api(
             w_content=w_content,
             w_keyword=w_keyword
         )
+        return results
+    except Exception as e:
+        return {"error": str(e)}
+
+@app.post("/search_by_image")
+async def search_by_image_api(
+    file: UploadFile = File(...),
+    topk: int = 10
+):
+    if not retriever:
+        return {"error": "Database not initialized."}
+    
+    try:
+        # Read image
+        contents = await file.read()
+        image = Image.open(io.BytesIO(contents)).convert("RGB")
+        
+        # Search
+        results = retriever.search_by_image(image, topk=topk)
         return results
     except Exception as e:
         return {"error": str(e)}

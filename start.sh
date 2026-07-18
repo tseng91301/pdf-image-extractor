@@ -21,6 +21,3 @@ tmux send-keys -t $SESSION "source venv/bin/activate" C-m
 tmux send-keys -t $SESSION "python app.py" C-m
 
 echo "Tmux session '$SESSION' restarted and app.py started."
-
-# Attach to the session
-tmux attach-session -t $SESSION

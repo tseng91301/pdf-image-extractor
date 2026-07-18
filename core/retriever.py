@@ -396,6 +396,57 @@ class MultiModalRetriever:
             "results": results[:topk]
         }
 
+    def search_by_image(
+        self,
+        image: Image.Image,
+        topk=10,
+        k_each=100
+    ):
+        """
+        Search for visually similar images using an input PIL Image.
+        """
+        if self.img_index is None:
+            raise RuntimeError("Image index not built")
+
+        # Encode input image
+        q_img = self.image_model.encode(
+            [image],
+            convert_to_numpy=True,
+            normalize_embeddings=True,
+        ).astype("float32")
+
+        # Recall from image index
+        _, Ii = self.img_index.search(q_img, k_each)
+        
+        cand = set(Ii[0])
+        results = []
+        for idx in cand:
+            s_img = float(np.dot(q_img[0], self.v_img[idx]))
+            
+            # Since this is pure image search, we don't have a text query.
+            # But we can still return metadata.
+            m = self.meta[idx]
+            
+            hit = {
+                "score": s_img,
+                "s_img": s_img,
+                "s_text": 0.0,
+                "s_title": 0.0,
+                "s_sur": 0.0,
+                "s_keyword": 0.0,
+                "best_sur_chunk": None,
+                "matched_keywords": [],
+                **m,
+            }
+            results.append(hit)
+
+        results.sort(key=lambda x: x["score"], reverse=True)
+        
+        return {
+            "query_keywords": [],
+            "results": results[:topk]
+        }
+
     # ----------------------------
     # Save/Load
     # ----------------------------

@@ -49,6 +49,7 @@
             margin: 0;
             background: linear-gradient(135deg, #3b82f6, #8b5cf6);
             -webkit-background-clip: text;
+            background-clip: text;
             -webkit-text-fill-color: transparent;
             font-weight: 700;
             font-size: 2rem;
@@ -444,13 +445,37 @@
     </header>
 
     <div class="search-container">
-        <div class="search-main">
-            <input type="text" id="searchInput" placeholder="輸入搜尋關鍵字 (例如: 許多螞蟻聚集)" onkeypress="handleKeyPress(event)">
-            <div class="topk-wrapper">
-                <label for="topkInput">前幾名:</label>
-                <input type="number" id="topkInput" value="10" min="1" max="50">
+        <div class="search-main" id="searchMain">
+            <!-- Group 1: Search Input + Upload Button -->
+            <div id="inputGroup" style="display: flex; align-items: center; border: 2px solid var(--border-color); border-radius: 0.75rem; padding: 0.15rem 0.75rem; flex-grow: 1; max-width: 450px; background: white; transition: all var(--transition-speed);">
+                <input type="text" id="searchInput" placeholder="輸入搜尋關鍵字 (例如: 許多螞蟻聚集)" onkeypress="handleKeyPress(event)" 
+                       style="border: none; outline: none; flex-grow: 1; padding: 0.7rem 0.5rem; font-size: 1rem; background: transparent;"
+                       onfocus="document.getElementById('inputGroup').style.borderColor='var(--primary-color)'; document.getElementById('inputGroup').style.boxShadow='0 0 0 3px rgba(59, 130, 246, 0.2)'"
+                       onblur="document.getElementById('inputGroup').style.borderColor='var(--border-color)'; document.getElementById('inputGroup').style.boxShadow='none'">
+                
+                <button type="button" onclick="document.getElementById('imageInput').click()" style="background: none; border: none; cursor: pointer; color: var(--secondary-color); display: flex; align-items: center; justify-content: center; padding: 0.5rem; transition: color 0.2s;" title="以圖搜圖" onmouseover="this.style.color='var(--primary-color)'" onmouseout="this.style.color='var(--secondary-color)'">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
+                </button>
+                <input type="file" id="imageInput" accept="image/*" style="display: none;" onchange="handleImageSelect(event)">
             </div>
-            <button class="search-btn" onclick="performSearch()">搜尋</button>
+            
+            <!-- Group 2: Top-K Label + Number Input -->
+            <div style="display: flex; align-items: center; gap: 0.75rem; margin-left: 0.5rem;">
+                <span style="font-weight: 600; color: var(--secondary-color); white-space: nowrap;">前幾名:</span>
+                <input type="number" id="topkInput" value="10" min="1" max="50" style="padding: 0.85rem; border: 2px solid var(--border-color); border-radius: 0.75rem; width: 75px; outline: none; font-family: inherit; transition: all var(--transition-speed);" onfocus="this.style.borderColor='var(--primary-color)'" onblur="this.style.borderColor='var(--border-color)'">
+            </div>
+            
+            <!-- Search Button -->
+            <button class="search-btn" id="searchBtn" onclick="performSearch()" style="margin-left: 0.5rem;">搜尋</button>
+        </div>
+
+        <!-- Image Preview Area -->
+        <div id="imagePreviewContainer" style="display: none; margin-top: 1rem; position: relative; width: 100%; max-width: 200px;">
+            <img id="imagePreview" src="" style="width: 100%; border-radius: 0.5rem; border: 2px solid var(--primary-color); object-fit: cover; max-height: 150px;">
+            <button onclick="clearImageSearch()" style="position: absolute; top: -10px; right: -10px; background: #ef4444; color: white; border: none; border-radius: 50%; width: 24px; height: 24px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: bold; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">
+                &times;
+            </button>
+            <div style="font-size: 0.75rem; color: var(--primary-color); font-weight: 600; margin-top: 0.25rem; text-align: center;">已選擇搜尋圖片</div>
         </div>
 
         <div class="advanced-settings">
@@ -526,6 +551,33 @@
     </div>
 
     <script>
+        let selectedImageFile = null;
+
+        function handleImageSelect(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            selectedImageFile = file;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                document.getElementById('imagePreview').src = e.target.result;
+                document.getElementById('imagePreviewContainer').style.display = 'block';
+                document.getElementById('searchInput').disabled = true;
+                document.getElementById('searchInput').placeholder = "已切換至「以圖搜圖」模式";
+                document.getElementById('searchBtn').textContent = "以圖搜圖";
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function clearImageSearch() {
+            selectedImageFile = null;
+            document.getElementById('imageInput').value = '';
+            document.getElementById('imagePreviewContainer').style.display = 'none';
+            document.getElementById('searchInput').disabled = false;
+            document.getElementById('searchInput').placeholder = "輸入搜尋關鍵字 (例如: 許多螞蟻聚集)";
+            document.getElementById('searchBtn').textContent = "搜尋";
+        }
+
         async function performSearch() {
             const query = document.getElementById('searchInput').value.trim();
             const topk = document.getElementById('topkInput').value || 10;
@@ -542,25 +594,41 @@
             const kwContainer = document.getElementById('queryKeywordsContainer');
             const kwTags = document.getElementById('queryKeywordTags');
 
-            if (!query) return;
+            if (!query && !selectedImageFile) return;
 
             grid.innerHTML = '';
             kwContainer.style.display = 'none';
             loader.style.display = 'flex';
 
             try {
-                const params = new URLSearchParams({
-                    q: query,
-                    topk: topk,
-                    w_text: wText,
-                    w_image: wImage,
-                    w_title: wTitle,
-                    w_content: wContent,
-                    w_keyword: wKeyword
-                });
+                let data;
+                if (selectedImageFile) {
+                    // Image search
+                    const formData = new FormData();
+                    formData.append('file', selectedImageFile);
+                    formData.append('topk', topk);
+
+                    const response = await fetch('/search_by_image', {
+                        method: 'POST',
+                        body: formData
+                    });
+                    data = await response.json();
+                } else {
+                    // Text search
+                    const params = new URLSearchParams({
+                        q: query,
+                        topk: topk,
+                        w_text: wText,
+                        w_image: wImage,
+                        w_title: wTitle,
+                        w_content: wContent,
+                        w_keyword: wKeyword
+                    });
+                    
+                    const response = await fetch(`/search?${params.toString()}`);
+                    data = await response.json();
+                }
                 
-                const response = await fetch(`/search?${params.toString()}`);
-                const data = await response.json();
                 loader.style.display = 'none';
 
                 if (data.error) {
