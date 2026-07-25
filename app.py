@@ -28,11 +28,9 @@ async def lifespan(app: FastAPI):
 app = FastAPI(lifespan=lifespan)
 
 # Mount static directories
-# output/ folder is mounted at /output
-if os.path.exists("output"):
-    app.mount("/output", StaticFiles(directory="output"), name="output")
-else:
-    print("Warning: 'output' directory not found.")
+IMAGE_DIR = "output1"
+os.makedirs(IMAGE_DIR, exist_ok=True)
+app.mount(f"/{IMAGE_DIR}", StaticFiles(directory=IMAGE_DIR), name=IMAGE_DIR)
     
 # agriculture_tech_docs/ folder is mounted at /agriculture_tech_docs
 if os.path.exists("agriculture_tech_docs"):
@@ -52,10 +50,7 @@ async def search_api(
     q: str, 
     topk: int = 10,
     w_text: float = 0.7,
-    w_image: float = 0.3,
-    w_title: float = 0.5,
-    w_content: float = 0.3,
-    w_keyword: float = 0.2
+    w_image: float = 0.3
 ):
     if not retriever:
         return {"error": "Database not initialized. Please ensure the database exists at startup."}
@@ -65,10 +60,7 @@ async def search_api(
             q,
             topk=topk,
             w_text=w_text,
-            w_image=w_image,
-            w_title=w_title,
-            w_content=w_content,
-            w_keyword=w_keyword
+            w_image=w_image
         )
         return results
     except Exception as e:
@@ -90,6 +82,75 @@ async def search_by_image_api(
         # Search
         results = retriever.search_by_image(image, topk=topk)
         return results
+    except Exception as e:
+        return {"error": str(e)}
+
+@app.get("/search/keywords")
+async def test_keywords_api(q: str):
+    if not retriever:
+        return {"error": "Database not initialized."}
+    try:
+        keywords = retriever.extract_query_keywords(q)
+        return {"query_keywords": keywords}
+    except Exception as e:
+        return {"error": str(e)}
+
+@app.get("/search/path_a")
+async def test_path_a_api(q: str, topk: int = 10):
+    if not retriever:
+        return {"error": "Database not initialized."}
+    try:
+        keywords = retriever.extract_query_keywords(q)
+        raw_results = retriever.search_path_a(keywords, k_each=100)
+        
+        # Min-max normalization for Path A
+        raw_values = [item[1] for item in raw_results]
+        min_val = min(raw_values) if raw_values else 0.0
+        max_val = max(raw_values) if raw_values else 0.0
+        
+        formatted = []
+        for idx, score, matched in raw_results:
+            meta = retriever.meta[idx]
+            norm_score = (score - min_val) / (max_val - min_val) if max_val > min_val else (1.0 if score > 0.0 else 0.0)
+            formatted.append({
+                "raw_score": score,
+                "normalized_score": norm_score,
+                "matched_pairs": matched,
+                **meta
+            })
+        return {
+            "query_keywords": keywords,
+            "results": formatted[:topk]
+        }
+    except Exception as e:
+        return {"error": str(e)}
+
+@app.get("/search/path_b")
+async def test_path_b_api(q: str, topk: int = 10):
+    if not retriever:
+        return {"error": "Database not initialized."}
+    try:
+        keywords = retriever.extract_query_keywords(q)
+        raw_results = retriever.search_path_b(keywords, k_each=100)
+        
+        # Min-max normalization for Path B
+        raw_values = [item[1] for item in raw_results]
+        min_val = min(raw_values) if raw_values else 0.0
+        max_val = max(raw_values) if raw_values else 0.0
+        
+        formatted = []
+        for idx, score in raw_results:
+            meta = retriever.meta[idx]
+            norm_score = (score - min_val) / (max_val - min_val) if max_val > min_val else (1.0 if score > 0.0 else 0.0)
+            formatted.append({
+                "raw_score": score,
+                "normalized_score": norm_score,
+                **meta
+            })
+        return {
+            "query_keywords": keywords,
+            "results": formatted[:topk]
+        }
     except Exception as e:
         return {"error": str(e)}
 

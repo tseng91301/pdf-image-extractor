@@ -1,4 +1,8 @@
-import os, json, re, torch
+import os
+import json
+import re
+import math
+import torch
 import numpy as np
 from PIL import Image
 import faiss
@@ -8,9 +12,6 @@ from .nlp_utils import extract_keywords
 from .translator import OfflineTranslator
 
 
-# ----------------------------
-# Utils
-# ----------------------------
 def normalize_text(s: str) -> str:
     s = s or ""
     s = s.replace("\u3000", " ")
@@ -19,37 +20,18 @@ def normalize_text(s: str) -> str:
     return s.strip()
 
 
-def chunk_text(text, chunk_size=120, overlap=30):
-    if not text:
-        return []
-    text = text.strip()
-    chunks = []
-    start = 0
-    step = max(1, chunk_size - overlap)
-    L = len(text)
-    while start < L:
-        end = min(start + chunk_size, L)
-        c = text[start:end].strip()
-        if c:
-            chunks.append(c)
-        start += step
-    return chunks
-
-
-# ----------------------------
-# Retriever
-# ----------------------------
 class MultiModalRetriever:
     text_model_name: str
     image_model_name: str
+
     def __init__(
         self,
-        text_model_name="paraphrase-multilingual-MiniLM-L12-v2",
+        text_model_name="BAAI/bge-small-zh-v1.5",
         image_model_name="clip-ViT-B-32",
         use_translation=True,
         device=None,
     ):
-        # device selection
+        # Device selection
         if device is None:
             if torch.cuda.is_available():
                 self.device = "cuda"
@@ -59,63 +41,48 @@ class MultiModalRetriever:
         else:
             self.device = device
 
-        # models
+        # Load models
         self.text_model_name = text_model_name
         self.image_model_name = image_model_name
         self.text_model = SentenceTransformer(text_model_name, device=self.device)
         self.image_model = SentenceTransformer(image_model_name, device=self.device)
 
-        # translator
+        # Translator
         self.translator = OfflineTranslator(device=self.device) if use_translation else None
 
-        # FAISS indices
-        self.title_index = None     # text
-        self.sur_index = None       # text (pooled, only for recall)
-        self.img_index = None       # image
+        # Image index (FAISS)
+        self.img_index = None
+        self.v_img = None
 
-        # dims
-        self.text_dim = None
+        # Dimensions
+        self.text_dim = self.text_model.get_sentence_embedding_dimension()
         self.image_dim = None
 
-        # stored vectors
-        self.v_title = None
-        self.v_img = None
-        self.v_sur_chunks = []      # list[np.ndarray], per image (n_chunks, text_dim)
-        self.sur_chunks_text = []   # list[list[str]]
-
+        # Unique keyword embeddings cache
+        self.keyword_embeddings = {}
         self.meta = []
 
-    # ----------------------------
-    # Index init
-    # ----------------------------
-    def _ensure_index(self, text_dim: int, image_dim: int):
-        if self.title_index is None:
-            self.title_index = faiss.IndexFlatIP(text_dim)
-            self.sur_index = faiss.IndexFlatIP(text_dim)
-            self.text_dim = text_dim
+        # Adjustable surround text keyword weight ranges (TF scaling)
+        self.w_surround_min = 0.1
+        self.w_surround_max = 0.6
 
+    def _ensure_index(self, image_dim: int):
         if self.img_index is None:
             self.img_index = faiss.IndexFlatIP(image_dim)
             self.image_dim = image_dim
 
-    # ----------------------------
-    # Add documents
-    # ----------------------------
     def add_document(
         self,
         json_path: str,
         images_dir: str,
         n_sur=3,
         doc_name_override=None,
-        chunk_size=20,
-        overlap=4,
+        **kwargs,
     ):
         data = json.load(open(json_path, "r", encoding="utf-8"))
         imgs = data["imgs"]
 
-        titles = []
         image_paths = []
-        sur_chunks_text_list = []
         new_meta = []
 
         for it in imgs:
@@ -125,17 +92,42 @@ class MultiModalRetriever:
                 continue
 
             fig_title = normalize_text(it.get("figure_title", ""))
-
             sur_list = (it.get("surrounding_texts", []) or [])[:n_sur]
             sur_list = [normalize_text(x) for x in sur_list if x.strip()]
 
-            sur_chunks = []
-            for sur in sur_list:
-                sur_chunks.extend(chunk_text(sur, chunk_size, overlap))
+            # 1. Extract keywords from Caption (weight = 1.0)
+            caption_kws = extract_keywords(fig_title, model=self.text_model, device=self.device)
 
-            titles.append(fig_title)
+            # 2. Extract keywords from surrounding text blocks (weight = 0.5)
+            text_kws = []
+            for sur in sur_list:
+                text_kws.extend(extract_keywords(sur, model=self.text_model, device=self.device))
+            text_kws = list(set(text_kws))
+
+            # 3. Merge weights: TF-based weights for surrounding text keywords
+            combined_sur_text = " ".join(sur_list)
+            counts = {}
+            for kw in text_kws:
+                counts[kw] = combined_sur_text.count(kw)
+
+            min_c = min(counts.values()) if counts else 0
+            max_c = max(counts.values()) if counts else 0
+
+            keyword_weights = {}
+            for kw, c in counts.items():
+                if max_c > min_c:
+                    # Min-Max normalize term frequency to [w_surround_min, w_surround_max]
+                    w = self.w_surround_min + (c - min_c) / (max_c - min_c) * (self.w_surround_max - self.w_surround_min)
+                else:
+                    w = self.w_surround_max
+                keyword_weights[kw] = float(w)
+
+            # Caption keywords overwrite with 1.0
+            for kw in caption_kws:
+                keyword_weights[kw] = 1.0
+
+            keywords = list(keyword_weights.keys())
             image_paths.append(png_path)
-            sur_chunks_text_list.append(sur_chunks)
 
             meta_item = {
                 "doc_name": doc_name_override or data.get("name"),
@@ -146,48 +138,34 @@ class MultiModalRetriever:
                 "coordinate": it.get("coordinate"),
                 "figure_title": fig_title,
                 "sur_text_list": sur_list,
-                "sur_chunks_used": sur_chunks,
+                "keywords": keywords,
+                "keyword_weights": keyword_weights,
             }
-            
-            # --- keyword extraction ---
-            text_source = (fig_title + " " + " ".join(sur_list)).strip()
-            meta_item["keywords"] = extract_keywords(text_source, topK=8)
-            
             new_meta.append(meta_item)
 
         if not image_paths:
             return 0
 
-        # ---- text embeddings (title) ----
-        v_title = self.text_model.encode(
-            titles,
-            batch_size=64,
-            convert_to_numpy=True,
-            normalize_embeddings=True,
-            show_progress_bar=True,
-        ).astype("float32")
-
-        # ---- text embeddings (surrounding chunks) ----
-        flat_chunks = []
-        chunk_ranges = []
-        cur = 0
-        for chunks in sur_chunks_text_list:
-            flat_chunks.extend(chunks)
-            chunk_ranges.append((cur, cur + len(chunks)))
-            cur += len(chunks)
-
-        if flat_chunks:
-            v_sur_all = self.text_model.encode(
-                flat_chunks,
+        # ---- Batch encode new keywords ----
+        new_keywords = set()
+        for item in new_meta:
+            for kw in item["keywords"]:
+                if kw not in self.keyword_embeddings:
+                    new_keywords.add(kw)
+        
+        if new_keywords:
+            new_keywords_list = list(new_keywords)
+            kw_embs = self.text_model.encode(
+                new_keywords_list,
                 batch_size=128,
                 convert_to_numpy=True,
                 normalize_embeddings=True,
-                show_progress_bar=True,
+                show_progress_bar=False,
             ).astype("float32")
-        else:
-            v_sur_all = None
+            for kw, emb in zip(new_keywords_list, kw_embs):
+                self.keyword_embeddings[kw] = emb
 
-        # ---- image embeddings ----
+        # ---- Image embeddings ----
         pil_imgs = [Image.open(p).convert("RGB") for p in image_paths]
         v_img = self.image_model.encode(
             pil_imgs,
@@ -197,214 +175,198 @@ class MultiModalRetriever:
             show_progress_bar=True,
         ).astype("float32")
 
-        # ---- ensure indices ----
-        self._ensure_index(v_title.shape[1], v_img.shape[1])
-
-        # ---- add to indices ----
-        self.title_index.add(v_title)
+        # ---- Ensure index and add ----
+        self._ensure_index(v_img.shape[1])
         self.img_index.add(v_img)
-
-        # pooled sur for recall (mean, only for candidate recall)
-        if v_sur_all is not None:
-            v_sur_pool = []
-            for a, b in chunk_ranges:
-                if a == b:
-                    v_sur_pool.append(np.zeros((self.text_dim,), dtype="float32"))
-                else:
-                    v_sur_pool.append(v_sur_all[a:b].mean(axis=0))
-            v_sur_pool = np.vstack(v_sur_pool)
-        else:
-            v_sur_pool = np.zeros((len(image_paths), self.text_dim), dtype="float32")
-
-        self.sur_index.add(v_sur_pool)
-
-        # ---- store vectors ----
-        self.v_title = v_title if self.v_title is None else np.vstack([self.v_title, v_title])
         self.v_img = v_img if self.v_img is None else np.vstack([self.v_img, v_img])
-
-        for i, (a, b) in enumerate(chunk_ranges):
-            if v_sur_all is None or a == b:
-                self.v_sur_chunks.append(np.zeros((0, self.text_dim), dtype="float32"))
-                self.sur_chunks_text.append([])
-            else:
-                self.v_sur_chunks.append(v_sur_all[a:b])
-                self.sur_chunks_text.append(sur_chunks_text_list[i])
 
         self.meta.extend(new_meta)
         return len(new_meta)
 
-    def add_folder(
-        self,
-        folder_path: str,
-        n_sur=3,
-        doc_name_override=None,
-        chunk_size=20,
-        overlap=4,
-    ):
-        """
-        直接新增一個資料夾，結構為:
-        {folder_path}/
-            metadata.json
-            image_0000.png
-            image_0001.png
-            ...
-        """
+    def add_folder(self, folder_path: str, n_sur=3, doc_name_override=None, **kwargs):
         return self.add_document(
             os.path.join(folder_path, "metadata.json"),
             folder_path,
             n_sur=n_sur,
             doc_name_override=doc_name_override,
-            chunk_size=chunk_size,
-            overlap=overlap,
         )
 
-    # ----------------------------
-    # Reset + build
-    # ----------------------------
-    def build(self, json_path: str, images_dir: str, n_sur=3):
-        self.title_index = None
-        self.sur_index = None
-        self.img_index = None
-        self.text_dim = None
-        self.image_dim = None
+    def extract_query_keywords(self, query: str) -> list:
+        query_keywords = extract_keywords(query, model=self.text_model, device=self.device)
+        if len(query_keywords) == 0:
+            query_keywords = jieba.lcut(query)
+        return [kw for kw in query_keywords if kw.strip()]
 
-        self.v_title = None
-        self.v_img = None
-        self.v_sur_chunks = []
-        self.sur_chunks_text = []
-        self.meta = []
+    def search_path_a(self, query_keywords: list, k_each=100) -> list:
+        if not query_keywords or not self.keyword_embeddings:
+            return []
+        db_keywords = list(self.keyword_embeddings.keys())
+        q_text_embs = self.text_model.encode(
+            query_keywords,
+            convert_to_numpy=True,
+            normalize_embeddings=True,
+            show_progress_bar=False,
+        ).astype("float32")
+        db_text_embs = np.array([self.keyword_embeddings[kw] for kw in db_keywords], dtype="float32")
+        
+        sim_matrix = q_text_embs @ db_text_embs.T  # [len(query_keywords), len(db_keywords)]
+        
+        matched_db_kws = {}
+        for i, q_kw in enumerate(query_keywords):
+            matched_db_kws[q_kw] = []
+            for j, db_kw in enumerate(db_keywords):
+                sim = float(sim_matrix[i, j])
+                if sim >= 0.70:
+                    matched_db_kws[q_kw].append((db_kw, sim))
 
-        return self.add_document(json_path, images_dir, n_sur=n_sur)
+        path_a_raw_scores = []
+        for idx, img_meta in enumerate(self.meta):
+            score_caption = 0.0
+            score_surround = 0.0
+            matched_pairs = []
+            for q_kw in query_keywords:
+                for db_kw, sim in matched_db_kws[q_kw]:
+                    if db_kw in img_meta.get("keyword_weights", {}):
+                        w = img_meta["keyword_weights"][db_kw]
+                        term_score = sim * w
+                        if w == 1.0:
+                            score_caption += term_score
+                        else:
+                            score_surround += term_score
+                        matched_pairs.append((q_kw, db_kw, sim, w, term_score))
+            
+            # Apply Method 2: Square root scaling for surrounding text score
+            score_A = score_caption + math.sqrt(score_surround)
+            if score_A > 0.0:
+                path_a_raw_scores.append((idx, score_A, matched_pairs))
+        
+        path_a_raw_scores.sort(key=lambda x: x[1], reverse=True)
+        return path_a_raw_scores[:k_each]
 
-    # ----------------------------
-    # Search
-    # ----------------------------
+    def search_path_b(self, query_keywords: list, k_each=100) -> list:
+        if not query_keywords or self.v_img is None:
+            return []
+        translated_query_keywords = []
+        for kw in query_keywords:
+            if self.translator:
+                translated = self.translator.translate(kw)
+                translated_query_keywords.append(translated)
+            else:
+                translated_query_keywords.append(kw)
+
+        q_img_embs = self.image_model.encode(
+            translated_query_keywords,
+            convert_to_numpy=True,
+            normalize_embeddings=True,
+            show_progress_bar=False,
+        ).astype("float32")
+        sim_matrix_B = q_img_embs @ self.v_img.T  # [len(query_keywords), num_images]
+
+        path_b_raw_scores = []
+        for idx in range(len(self.meta)):
+            score_B = 0.0
+            for i in range(len(query_keywords)):
+                sim = float(sim_matrix_B[i, idx])
+                if sim >= 0.70:
+                    score_B += sim
+            if score_B > 0.0:
+                path_b_raw_scores.append((idx, score_B))
+
+        path_b_raw_scores.sort(key=lambda x: x[1], reverse=True)
+        return path_b_raw_scores[:k_each]
+
     def search(
         self,
         query: str,
         topk=10,
-        k_each=50,
+        k_each=100,
         w_text=0.7,
         w_image=0.3,
-        w_title=0.5,
-        w_content=0.3,
-        w_keyword=0.2,
+        **kwargs,
     ):
-        if self.title_index is None:
+        if self.v_img is None:
             raise RuntimeError("Index not built")
 
-        # Extract query keywords
-        query_keywords = extract_keywords(query, topK=5)
-        if len(query_keywords) == 0:
-            query_keywords = jieba.lcut(query)
-        q_set = set(query_keywords)
+        query_keywords = self.extract_query_keywords(query)
+        if not query_keywords:
+            return {"query_keywords": [], "results": []}
 
-        # Normalize Category weights
-        s_cat = w_text + w_image
-        if s_cat > 0:
-            alpha_text = w_text / s_cat
-            alpha_image = w_image / s_cat
-        else:
-            alpha_text, alpha_image = 0.5, 0.5
+        # 🛑 Path A: Text to Text Search
+        top_k1_scores = self.search_path_a(query_keywords, k_each=k_each)
 
-        # Normalize Sub-category weights
-        s_sub = w_title + w_content + w_keyword
-        if s_sub > 0:
-            beta_title = w_title / s_sub
-            beta_content = w_content / s_sub
-            beta_keyword = w_keyword / s_sub
-        else:
-            beta_title, beta_content, beta_keyword = 1/3, 1/3, 1/3
+        # 🛑 Path B: Text to Image Search
+        top_k2_scores = self.search_path_b(query_keywords, k_each=k_each)
 
-        # Translate query if needed (especially for CLIP/image search)
-        search_query_en = query
-        if self.translator:
-            search_query_en = self.translator.translate(query)
-            if search_query_en != query:
-                print(f"[Search] Translated query: '{query}' -> '{search_query_en}'")
-
-        # encode query
-        q_text = self.text_model.encode(
-            [query],
-            convert_to_numpy=True,
-            normalize_embeddings=True,
-        ).astype("float32")
-
-        q_img = self.image_model.encode(
-            [search_query_en],
-            convert_to_numpy=True,
-            normalize_embeddings=True,
-        ).astype("float32")
-
-        # recall
-        # We always recall from all indices
-        _, It = self.title_index.search(q_text, k_each)
-        _, Is = self.sur_index.search(q_text, k_each)
-        _, Ii = self.img_index.search(q_img, k_each)
-
-        cand = set(It[0]) | set(Is[0]) | set(Ii[0])
-
-        results = []
-        for idx in cand:
-            # 1. Title Score
-            s_title = float(np.dot(q_text[0], self.v_title[idx]))
-
-            # 2. Surrounding/Content Score
-            v_chunks = self.v_sur_chunks[idx]
-            if v_chunks.shape[0] == 0:
-                s_sur = 0.0
-                best_chunk = None
-            else:
-                scores = v_chunks @ q_text[0]
-                best_i = int(np.argmax(scores))
-                s_sur = float(scores[best_i])
-                best_chunk = self.sur_chunks_text[idx][best_i]
-
-            # 3. Keyword Score
-            m = self.meta[idx]
-            doc_keywords = m.get("keywords", [])
-            doc_set = set(doc_keywords)
-            intersection = q_set.intersection(doc_set)
-            s_keyword = len(intersection) / len(q_set) if len(q_set) > 0 else 0.0
-
-            # 4. Image Score
-            s_img = float(np.dot(q_img[0], self.v_img[idx]))
-
-            # Combine Text Score
-            s_text_combined = beta_title * s_title + beta_content * s_sur + beta_keyword * s_keyword
-            
-            # Final Score
-            score = alpha_text * s_text_combined + alpha_image * s_img
-
-            hit = {
-                "score": score,
-                "s_text": s_text_combined,
-                "s_title": s_title,
-                "s_sur": s_sur,
-                "s_keyword": s_keyword,
-                "s_img": s_img,
-                "best_sur_chunk": best_chunk,
-                "matched_keywords": list(intersection),
-                **m,
-            }
-            results.append(hit)
-
-        results.sort(key=lambda x: x["score"], reverse=True)
+        # 🛑 Merge & Output
+        union_indices = set(idx for idx, _, _ in top_k1_scores) | set(idx for idx, _ in top_k2_scores)
         
+        # Min-Max Normalization Path A
+        scores_A_map = {idx: s for idx, s, _ in top_k1_scores}
+        matched_pairs_map = {idx: mp for idx, _, mp in top_k1_scores}
+        raw_A_values = list(scores_A_map.values())
+        min_A = min(raw_A_values) if raw_A_values else 0.0
+        max_A = max(raw_A_values) if raw_A_values else 0.0
+
+        # Min-Max Normalization Path B
+        scores_B_map = {idx: s for idx, s in top_k2_scores}
+        raw_B_values = list(scores_B_map.values())
+        min_B = min(raw_B_values) if raw_B_values else 0.0
+        max_B = max(raw_B_values) if raw_B_values else 0.0
+
+        fused_results = []
+        for idx in union_indices:
+            raw_score_A = scores_A_map.get(idx, 0.0)
+            if max_A > min_A:
+                norm_score_A = (raw_score_A - min_A) / (max_A - min_A)
+            else:
+                norm_score_A = 1.0 if raw_score_A > 0.0 else 0.0
+
+            raw_score_B = scores_B_map.get(idx, 0.0)
+            if max_B > min_B:
+                norm_score_B = (raw_score_B - min_B) / (max_B - min_B)
+            else:
+                norm_score_B = 1.0 if raw_score_B > 0.0 else 0.0
+
+            # Late fusion combination
+            denom = w_text + w_image
+            if denom > 0.0:
+                alpha_text = w_text / denom
+                alpha_image = w_image / denom
+            else:
+                alpha_text, alpha_image = 0.5, 0.5
+
+            final_score = alpha_text * norm_score_A + alpha_image * norm_score_B
+
+            # Extract matched query keywords
+            matched_pairs = matched_pairs_map.get(idx, [])
+            matched_kws = list(set(p[0] for p in matched_pairs))
+            matched_details = [
+                {"q_kw": p[0], "db_kw": p[1], "sim": p[2], "weight": p[3], "score": p[4]}
+                for p in matched_pairs
+            ]
+
+            meta_item = self.meta[idx]
+            fused_results.append({
+                "score": final_score,
+                "s_text": norm_score_A,
+                "s_img": norm_score_B,
+                # compatibility properties for frontend
+                "s_title": norm_score_A,
+                "s_sur": 0.0,
+                "s_keyword": norm_score_A,
+                "best_sur_chunk": None,
+                "matched_keywords": matched_kws,
+                "matched_details": matched_details,
+                **meta_item,
+            })
+
+        fused_results.sort(key=lambda x: x["score"], reverse=True)
         return {
             "query_keywords": query_keywords,
-            "results": results[:topk]
+            "results": fused_results[:topk],
         }
 
-    def search_by_image(
-        self,
-        image: Image.Image,
-        topk=10,
-        k_each=100
-    ):
-        """
-        Search for visually similar images using an input PIL Image.
-        """
+    def search_by_image(self, image: Image.Image, topk=10, k_each=100):
         if self.img_index is None:
             raise RuntimeError("Image index not built")
 
@@ -417,17 +379,14 @@ class MultiModalRetriever:
 
         # Recall from image index
         _, Ii = self.img_index.search(q_img, k_each)
-        
+
         cand = set(Ii[0])
         results = []
         for idx in cand:
             s_img = float(np.dot(q_img[0], self.v_img[idx]))
-            
-            # Since this is pure image search, we don't have a text query.
-            # But we can still return metadata.
             m = self.meta[idx]
-            
-            hit = {
+
+            results.append({
                 "score": s_img,
                 "s_img": s_img,
                 "s_text": 0.0,
@@ -437,134 +396,78 @@ class MultiModalRetriever:
                 "best_sur_chunk": None,
                 "matched_keywords": [],
                 **m,
-            }
-            results.append(hit)
+            })
 
         results.sort(key=lambda x: x["score"], reverse=True)
-        
         return {
             "query_keywords": [],
-            "results": results[:topk]
+            "results": results[:topk],
         }
 
-    # ----------------------------
-    # Save/Load
-    # ----------------------------
     @staticmethod
     def load(
         db_dir: str,
-        text_model_name="paraphrase-multilingual-MiniLM-L12-v2",
+        text_model_name="BAAI/bge-small-zh-v1.5",
         image_model_name="clip-ViT-B-32",
         use_translation=True,
         device=None,
     ):
-        """
-        Load a saved MultiModalRetriever database and return a new instance.
-        """
-        
-        cfg_path = os.path.join(db_dir, "config.json")
-        if os.path.exists(cfg_path):
-            with open(cfg_path, "r", encoding="utf-8") as f:
-                cfg = json.load(f)
-            if cfg.get("text_model_name") != text_model_name:
-                print("[WARN] text_model_name does not match saved DB")
-            if cfg.get("image_model_name") != image_model_name:
-                print("[WARN] image_model_name does not match saved DB")
-
-        # 1️⃣ 建立新物件（model 會在 __init__ 初始化）
         r = MultiModalRetriever(
             text_model_name=text_model_name,
             image_model_name=image_model_name,
             use_translation=use_translation,
             device=device,
         )
+        r.img_index = faiss.read_index(os.path.join(db_dir, "img.faiss"))
 
-        # 2️⃣ Load FAISS indices
-        r.title_index = faiss.read_index(os.path.join(db_dir, "title.faiss"))
-        r.sur_index   = faiss.read_index(os.path.join(db_dir, "sur.faiss"))
-        r.img_index   = faiss.read_index(os.path.join(db_dir, "img.faiss"))
-
-        # 3️⃣ Load vectors / dims
         data = np.load(os.path.join(db_dir, "vectors.npz"), allow_pickle=True)
-
-        r.v_title = data["v_title"]
         r.v_img = data["v_img"]
-        r.v_sur_chunks = list(data["v_sur_chunks"])
-        r.sur_chunks_text = list(data["sur_chunks_text"])
-
-        r.text_dim = int(data["text_dim"])
         r.image_dim = int(data["image_dim"])
+        r.text_dim = int(data["text_dim"]) if "text_dim" in data else r.text_model.get_sentence_embedding_dimension()
 
-        # 4️⃣ Load meta
+        r.keyword_embeddings = {}
+        if "kw_keys" in data and "kw_values" in data:
+            keys = data["kw_keys"]
+            values = data["kw_values"]
+            for k, v in zip(keys, values):
+                r.keyword_embeddings[str(k)] = v
+
         with open(os.path.join(db_dir, "meta.json"), "r", encoding="utf-8") as f:
             r.meta = json.load(f)
 
+        # Load config and override weight parameters
+        config_path = os.path.join(db_dir, "config.json")
+        if os.path.exists(config_path):
+            try:
+                with open(config_path, "r", encoding="utf-8") as f:
+                    cfg = json.load(f)
+                    r.w_surround_min = cfg.get("w_surround_min", 0.1)
+                    r.w_surround_max = cfg.get("w_surround_max", 0.6)
+            except Exception:
+                pass
+
         return r
-
-
 
     def save(self, db_dir: str):
         os.makedirs(db_dir, exist_ok=True)
+        faiss.write_index(self.img_index, os.path.join(db_dir, "img.faiss"))
 
-        # --- FAISS indices ---
-        faiss.write_index(self.title_index, os.path.join(db_dir, "title.faiss"))
-        faiss.write_index(self.sur_index,   os.path.join(db_dir, "sur.faiss"))
-        faiss.write_index(self.img_index,   os.path.join(db_dir, "img.faiss"))
-
-        # --- vectors ---
         np.savez_compressed(
             os.path.join(db_dir, "vectors.npz"),
-            v_title=self.v_title,
             v_img=self.v_img,
-            v_sur_chunks=np.array(self.v_sur_chunks, dtype=object),
-            sur_chunks_text=np.array(self.sur_chunks_text, dtype=object),
-            text_dim=self.text_dim,
             image_dim=self.image_dim,
+            text_dim=self.text_dim,
+            kw_keys=np.array(list(self.keyword_embeddings.keys())),
+            kw_values=np.array(list(self.keyword_embeddings.values()), dtype="float32") if self.keyword_embeddings else np.zeros((0, self.text_dim), dtype="float32"),
         )
 
-        # --- meta ---
         with open(os.path.join(db_dir, "meta.json"), "w", encoding="utf-8") as f:
             json.dump(self.meta, f, ensure_ascii=False, indent=2)
-            
+
         with open(os.path.join(db_dir, "config.json"), "w", encoding="utf-8") as f:
             json.dump({
                 "text_model_name": self.text_model_name or "",
                 "image_model_name": self.image_model_name or "",
+                "w_surround_min": self.w_surround_min,
+                "w_surround_max": self.w_surround_max,
             }, f, indent=2)
-
-
-if __name__ == "__main__":
-    # ===== 用法 =====
-    # r = MultiModalRetriever()
-    # r.add_folder("output_stored/L1Vin1RByA/image_datas", n_sur=3)
-    # r.add_folder("output_stored/43Uk9N1gnY/image_datas", n_sur=3)
-    # r = MultiModalRetriever.load("db")
-    
-    # Check if DB exists, if not, create a placeholder or error
-    DB_PATH = "agriculture_db"
-    if os.path.exists(DB_PATH):
-        r = MultiModalRetriever.load(DB_PATH)
-        # 許多螞蟻聚集在水管裡的圖片
-        input_text = input("輸入搜索關鍵字: ")
-        
-        output = r.search(
-            input_text,
-            topk=3,
-            w_text=0.7,
-            w_image=0.3,
-            w_title=0.7,
-            w_content=0.3,
-            w_keyword=0.2
-        )
-        hits = output["results"]
-        
-        # print("搜索結果如下(列出信心值前三的相關圖片): ")
-        for i, hit in enumerate(hits[:3]):
-            print(f"{i+1}. 圖片位置: {hit['image_path']} | 對應文件名稱: {hit['doc_name']} | 信心值: {hit['score']:.2f}")
-        
-        open("o.json", "w", encoding="utf-8").write(json.dumps(hits, ensure_ascii=False, indent=2))
-        print("詳細尋結果已儲存到 o.json 中。")
-    else:
-        print("資料庫 'db' 不存在，請先運行索引腳本。")
-
-

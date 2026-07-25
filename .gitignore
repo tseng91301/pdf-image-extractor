@@ -5,7 +5,7 @@ venv/
 venv2/
 tmp_pages/
 tmp/
-output/
+output*/
 output_stored/
 __pycache__/
 env/

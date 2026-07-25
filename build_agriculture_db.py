@@ -4,7 +4,7 @@ from core.converter import PdfInfo
 from core.retriever import MultiModalRetriever
 
 # 設定路徑
-SOURCE_DIR = "agriculture_tech_docs"
+SOURCE_DIR = "example_pdfs"
 DB_SAVE_PATH = "agriculture_db"
 PROCESSED_LOG = "processed_docs.json"
 SAVE_INTERVAL = 5  # 每 5 個文件存檔一次

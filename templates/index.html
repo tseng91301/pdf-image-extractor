@@ -485,7 +485,7 @@
             </div>
             
             <!-- Category Weights -->
-            <div style="width: 100%; display: flex; flex-wrap: wrap; gap: 1.5rem; padding-bottom: 1rem; border-bottom: 1px dashed var(--border-color);">
+            <div style="width: 100%; display: flex; flex-wrap: wrap; gap: 1.5rem;">
                 <div class="setting-group" title="影像特徵權重">
                     <label>影像權重:</label>
                     <input type="range" id="wImageRange" min="0" max="1" step="0.1" value="0.3" oninput="document.getElementById('wImageInput').value = this.value">
@@ -495,25 +495,6 @@
                     <label>文字權重:</label>
                     <input type="range" id="wTextRange" min="0" max="1" step="0.1" value="0.7" oninput="document.getElementById('wTextInput').value = this.value">
                     <input type="number" id="wTextInput" min="0" max="1" step="0.1" value="0.7" oninput="document.getElementById('wTextRange').value = this.value">
-                </div>
-            </div>
-
-            <!-- Text Component Weights -->
-            <div style="width: 100%; display: flex; flex-wrap: wrap; gap: 1.5rem; margin-top: 1rem;">
-                <div class="setting-group" title="標題權重">
-                    <label>標題:</label>
-                    <input type="range" id="wTitleRange" min="0" max="1" step="0.1" value="0.5" oninput="document.getElementById('wTitleInput').value = this.value">
-                    <input type="number" id="wTitleInput" min="0" max="1" step="0.1" value="0.5" oninput="document.getElementById('wTitleRange').value = this.value">
-                </div>
-                <div class="setting-group" title="內文權重">
-                    <label>內文:</label>
-                    <input type="range" id="wContentRange" min="0" max="1" step="0.1" value="0.3" oninput="document.getElementById('wContentInput').value = this.value">
-                    <input type="number" id="wContentInput" min="0" max="1" step="0.1" value="0.3" oninput="document.getElementById('wContentRange').value = this.value">
-                </div>
-                <div class="setting-group" title="關鍵字權重">
-                    <label>關鍵字:</label>
-                    <input type="range" id="wKeywordRange" min="0" max="1" step="0.1" value="0.2" oninput="document.getElementById('wKeywordInput').value = this.value">
-                    <input type="number" id="wKeywordInput" min="0" max="1" step="0.1" value="0.2" oninput="document.getElementById('wKeywordRange').value = this.value">
                 </div>
             </div>
         </div>
@@ -585,9 +566,6 @@
             // Get weight values
             const wText = document.getElementById('wTextInput').value || 0.7;
             const wImage = document.getElementById('wImageInput').value || 0.3;
-            const wTitle = document.getElementById('wTitleInput').value || 0.5;
-            const wContent = document.getElementById('wContentInput').value || 0.3;
-            const wKeyword = document.getElementById('wKeywordInput').value || 0.2;
             
             const grid = document.getElementById('resultsGrid');
             const loader = document.getElementById('loaderContainer');
@@ -619,10 +597,7 @@
                         q: query,
                         topk: topk,
                         w_text: wText,
-                        w_image: wImage,
-                        w_title: wTitle,
-                        w_content: wContent,
-                        w_keyword: wKeyword
+                        w_image: wImage
                     });
                     
                     const response = await fetch(`/search?${params.toString()}`);
@@ -654,26 +629,61 @@
                     card.className = 'result-card animated-card';
                     card.style.animationDelay = `${index * 0.05}s`;
 
-                    let imgUrl = `/${item.image_path}`;
+                    let imgUrl = `/${item.image_path}?t=${new Date().getTime()}`;
                     const pdfPath = item.doc_name;
                     const fullPdfUrl = `/agriculture_tech_docs/${pdfPath}#page=${item.page}`;
 
                     // Extract best_sur_chunk for brief preview
                     const snippet = item.best_sur_chunk ? `<div style="font-size: 0.85rem; color: #475569; margin-top: 0.5rem; background: #f1f5f9; padding: 0.5rem; border-radius: 0.5rem; border-left: 3px solid #3b82f6;"><i>"...${item.best_sur_chunk}..."</i></div>` : '';
 
-                    // Matched keywords tags
-                    const matchedTags = item.matched_keywords && item.matched_keywords.length > 0 
-                        ? `<div style="margin-top: 0.5rem; display: flex; flex-wrap: wrap; gap: 0.35rem;">
-                             ${item.matched_keywords.map(kw => `<span style="background: #dcfce7; color: #166534; font-size: 0.75rem; padding: 0.1rem 0.5rem; border-radius: 4px; font-weight: 600;">${kw}</span>`).join('')}
+                    // Matched/Selected keywords tags with details (including weighted scores)
+                    const matchedTags = item.matched_details && item.matched_details.length > 0 
+                        ? `<div style="margin-top: 0.75rem; border-top: 1px solid #f1f5f9; padding-top: 0.5rem;">
+                             <div style="font-size: 0.75rem; font-weight: 700; color: #16a34a; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.35rem; display: flex; align-items: center; justify-content: space-between;">
+                               <span>有選中的標籤 (加權分數):</span>
+                               <span style="font-size: 0.65rem; color: #cbd5e1; font-weight: normal; text-transform: none;">
+                                 <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:#dbeafe; border:1px solid #bfdbfe; margin-right:2px;"></span>圖說
+                                 <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:#f3e8ff; border:1px solid #e9d5ff; margin-left:6px; margin-right:2px;"></span>內文
+                               </span>
+                             </div>
+                             <div style="display: flex; flex-wrap: wrap; gap: 0.35rem;">
+                               ${item.matched_details.map(detail => {
+                                   const isCaption = detail.weight === 1.0;
+                                   let badgeStyle = isCaption
+                                       ? "background-color: #dbeafe; color: #1e40af; border: 1px solid #bfdbfe; font-weight: 600;"
+                                       : "background-color: #f3e8ff; color: #6b21a8; border: 1px solid #e9d5ff;";
+                                   
+                                   const displayScore = detail.score ? detail.score.toFixed(2) : '0.00';
+                                   return `<span style="font-size: 0.75rem; padding: 0.15rem 0.5rem; border-radius: 4px; ${badgeStyle}">
+                                     ${detail.db_kw} (${displayScore})
+                                   </span>`;
+                               }).join('')}
+                             </div>
                            </div>` 
                         : '';
                     
-                    // All doc keywords
+                    // All doc keywords with weight-based color styling
                     const docKeywords = item.keywords && item.keywords.length > 0
                         ? `<div style="margin-top: 0.75rem; border-top: 1px solid #f1f5f9; padding-top: 0.5rem;">
-                             <div style="font-size: 0.75rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.25rem;">圖片關鍵字:</div>
-                             <div style="display: flex; flex-wrap: wrap; gap: 0.25rem;">
-                               ${item.keywords.map(kw => `<span style="color: #64748b; font-size: 0.75rem;">#${kw}</span>`).join(' ')}
+                             <div style="font-size: 0.75rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.35rem; display: flex; align-items: center; justify-content: space-between;">
+                               <span>圖片關鍵字 (原始權重):</span>
+                               <span style="font-size: 0.65rem; color: #cbd5e1; font-weight: normal; text-transform: none;">
+                                 <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:#dbeafe; border:1px solid #bfdbfe; margin-right:2px;"></span>圖說
+                                 <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:#f3e8ff; border:1px solid #e9d5ff; margin-left:6px; margin-right:2px;"></span>內文
+                               </span>
+                             </div>
+                             <div style="display: flex; flex-wrap: wrap; gap: 0.35rem;">
+                               ${item.keywords.map(kw => {
+                                   const weight = item.keyword_weights ? item.keyword_weights[kw] : null;
+                                   let badgeStyle = "background-color: #f1f5f9; color: #64748b; border: 1px solid #cbd5e1;";
+                                   if (weight === 1.0) {
+                                       badgeStyle = "background-color: #dbeafe; color: #1e40af; border: 1px solid #bfdbfe; font-weight: 600;";
+                                   } else if (weight < 1.0 && weight !== null) {
+                                       badgeStyle = "background-color: #f3e8ff; color: #6b21a8; border: 1px solid #e9d5ff;";
+                                   }
+                                   const displayWeight = weight !== null ? ` (${weight.toFixed(2)})` : '';
+                                   return `<span style="font-size: 0.75rem; padding: 0.15rem 0.5rem; border-radius: 4px; ${badgeStyle}">#${kw}${displayWeight}</span>`;
+                               }).join('')}
                              </div>
                            </div>`
                         : '';
@@ -694,13 +704,8 @@
                             </div>
                             <div class="score-info">
                                 <b>總分 (score): ${(item.score).toFixed(4)}</b>
-                                <span>文本總分 (s_text): ${(item.s_text).toFixed(4)}</span>
-                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 4px; padding-left: 8px; border-left: 2px solid #e2e8f0; margin: 4px 0;">
-                                    <span style="font-size: 0.75rem;">└ 標題: ${(item.s_title).toFixed(4)}</span>
-                                    <span style="font-size: 0.75rem;">└ 內文: ${(item.s_sur).toFixed(4)}</span>
-                                    <span style="font-size: 0.75rem;">└ 關鍵字: ${(item.s_keyword).toFixed(4)}</span>
-                                </div>
-                                <span>影像 (s_img): ${(item.s_img).toFixed(4)}</span>
+                                <span>文本得分 (s_text): ${(item.s_text).toFixed(4)}</span>
+                                <span>影像得分 (s_img): ${(item.s_img).toFixed(4)}</span>
                             </div>
                             <button class="preview-btn" onclick="openModal('${encodeURIComponent(pdfPath)}', ${item.page}, '${item.doc_name.split('/').pop()}')">
                                 打開 PDF 預覽
