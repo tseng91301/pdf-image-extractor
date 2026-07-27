@@ -436,6 +436,16 @@
             animation: fadeIn 0.6s ease-out forwards;
             opacity: 0;
         }
+
+        summary {
+            list-style: none;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        summary::-webkit-details-marker {
+            display: none;
+        }
     </style>
 </head>
 <body>
@@ -639,40 +649,58 @@
                     // Matched/Selected keywords tags with details (including weighted scores)
                     const matchedTags = item.matched_details && item.matched_details.length > 0 
                         ? `<div style="margin-top: 0.75rem; border-top: 1px solid #f1f5f9; padding-top: 0.5rem;">
-                             <div style="font-size: 0.75rem; font-weight: 700; color: #16a34a; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.35rem; display: flex; align-items: center; justify-content: space-between;">
-                               <span>有選中的標籤 (加權分數):</span>
-                               <span style="font-size: 0.65rem; color: #cbd5e1; font-weight: normal; text-transform: none;">
-                                 <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:#dbeafe; border:1px solid #bfdbfe; margin-right:2px;"></span>圖說
-                                 <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:#f3e8ff; border:1px solid #e9d5ff; margin-left:6px; margin-right:2px;"></span>內文
-                               </span>
+                             <div style="font-size: 0.75rem; font-weight: 700; color: #16a34a; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.35rem;">
+                               文字匹配關鍵字 (文本對文本):
                              </div>
                              <div style="display: flex; flex-wrap: wrap; gap: 0.35rem;">
                                ${item.matched_details.map(detail => {
                                    const isCaption = detail.weight === 1.0;
-                                   let badgeStyle = isCaption
-                                       ? "background-color: #dbeafe; color: #1e40af; border: 1px solid #bfdbfe; font-weight: 600;"
-                                       : "background-color: #f3e8ff; color: #6b21a8; border: 1px solid #e9d5ff;";
-                                   
-                                   const displayScore = detail.score ? detail.score.toFixed(2) : '0.00';
-                                   return `<span style="font-size: 0.75rem; padding: 0.15rem 0.5rem; border-radius: 4px; ${badgeStyle}">
-                                     ${detail.db_kw} (${displayScore})
-                                   </span>`;
+                                   const typeLabel = isCaption ? "caption" : "內文";
+                                   const typeBadgeStyle = isCaption
+                                       ? "background-color: #1e40af; color: white; padding: 0.05rem 0.25rem; border-radius: 3px; font-size: 0.65rem;"
+                                       : "background-color: #6b21a8; color: white; padding: 0.05rem 0.25rem; border-radius: 3px; font-size: 0.65rem;";
+                                   const displayScore = detail.score ? detail.score.toFixed(4) : '0.0000';
+                                   return `<div style="font-size: 0.75rem; padding: 0.2rem 0.5rem; border-radius: 6px; border: 1px solid #e2e8f0; background-color: #f8fafc; color: #475569; display: inline-flex; align-items: center; gap: 0.35rem; margin-bottom: 0.2rem;">
+                                     <span style="font-weight: 500;">${detail.q_kw} ➔ ${detail.db_kw}</span>
+                                     <span style="${typeBadgeStyle}">${typeLabel}</span>
+                                     <span style="color: #0f172a; font-weight: 600;">加權分: ${displayScore}</span>
+                                   </div>`;
                                }).join('')}
                              </div>
                            </div>` 
                         : '';
                     
-                    // All doc keywords with weight-based color styling
-                    const docKeywords = item.keywords && item.keywords.length > 0
+                    // Query to image similarity section
+                    const queryToImgSim = item.query_to_img_similarity && item.query_to_img_similarity.length > 0
                         ? `<div style="margin-top: 0.75rem; border-top: 1px solid #f1f5f9; padding-top: 0.5rem;">
-                             <div style="font-size: 0.75rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.35rem; display: flex; align-items: center; justify-content: space-between;">
-                               <span>圖片關鍵字 (原始權重):</span>
-                               <span style="font-size: 0.65rem; color: #cbd5e1; font-weight: normal; text-transform: none;">
-                                 <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:#dbeafe; border:1px solid #bfdbfe; margin-right:2px;"></span>圖說
-                                 <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:#f3e8ff; border:1px solid #e9d5ff; margin-left:6px; margin-right:2px;"></span>內文
-                               </span>
+                             <div style="font-size: 0.75rem; font-weight: 700; color: #3b82f6; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.35rem;">
+                               查詢關鍵字對圖片相似度 (文本對影像):
                              </div>
                              <div style="display: flex; flex-wrap: wrap; gap: 0.35rem;">
+                               ${item.query_to_img_similarity.map(simItem => {
+                                   const displayKw = simItem.translated_kw && simItem.translated_kw.toLowerCase() !== simItem.q_kw.toLowerCase()
+                                       ? `${simItem.q_kw} (${simItem.translated_kw})`
+                                       : simItem.q_kw;
+                                   const simVal = simItem.similarity ? simItem.similarity.toFixed(4) : '0.0000';
+                                   return `
+                                     <div style="display: inline-flex; align-items: center; gap: 0.3rem; font-size: 0.75rem; padding: 0.2rem 0.5rem; border-radius: 6px; background-color: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe;">
+                                       <span style="font-weight: 500;">${displayKw}</span>
+                                       <span style="font-weight: 700; margin-left: 0.2rem; color: #1e3a8a;">${simVal}</span>
+                                     </div>
+                                   `;
+                               }).join('')}
+                             </div>
+                           </div>`
+                        : '';
+
+                    // All doc keywords with weight-based color styling (collapsible)
+                    const docKeywords = item.keywords && item.keywords.length > 0
+                        ? `<details style="margin-top: 0.75rem; border-top: 1px solid #f1f5f9; padding-top: 0.5rem; cursor: pointer;">
+                             <summary style="font-size: 0.75rem; font-weight: 700; color: #94a3b8; outline: none; user-select: none; display: flex; align-items: center; justify-content: space-between;">
+                               <span>圖片所有關鍵字及權重 (點擊展開)</span>
+                               <span style="font-size: 0.65rem; color: #cbd5e1; font-weight: normal;">${item.keywords.length} 個</span>
+                             </summary>
+                             <div style="display: flex; flex-wrap: wrap; gap: 0.35rem; margin-top: 0.5rem; cursor: default;" onclick="event.stopPropagation();">
                                ${item.keywords.map(kw => {
                                    const weight = item.keyword_weights ? item.keyword_weights[kw] : null;
                                    let badgeStyle = "background-color: #f1f5f9; color: #64748b; border: 1px solid #cbd5e1;";
@@ -685,7 +713,7 @@
                                    return `<span style="font-size: 0.75rem; padding: 0.15rem 0.5rem; border-radius: 4px; ${badgeStyle}">#${kw}${displayWeight}</span>`;
                                }).join('')}
                              </div>
-                           </div>`
+                           </details>`
                         : '';
 
                     card.innerHTML = `
@@ -699,6 +727,7 @@
                                 <div><span class="highlight-text">文件:</span> ${item.doc_name.split('/').pop()}</div>
                                 <div style="margin-top: 0.25rem;"><span class="highlight-text">頁面:</span> 第 ${item.page} 頁</div>
                                 ${matchedTags}
+                                ${queryToImgSim}
                                 ${snippet}
                                 ${docKeywords}
                             </div>

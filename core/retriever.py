@@ -197,8 +197,10 @@ class MultiModalRetriever:
             query_keywords = jieba.lcut(query)
         return [kw for kw in query_keywords if kw.strip()]
 
-    def search_path_a(self, query_keywords: list, k_each=100) -> list:
+    def search_path_a(self, query_keywords: list, k_each=100, return_all=False) -> list:
         if not query_keywords or not self.keyword_embeddings:
+            if return_all:
+                return [], {}
             return []
         db_keywords = list(self.keyword_embeddings.keys())
         q_text_embs = self.text_model.encode(
@@ -220,6 +222,7 @@ class MultiModalRetriever:
                     matched_db_kws[q_kw].append((db_kw, sim))
 
         path_a_raw_scores = []
+        all_scores_dict = {}
         for idx, img_meta in enumerate(self.meta):
             score_caption = 0.0
             score_surround = 0.0
@@ -237,14 +240,20 @@ class MultiModalRetriever:
             
             # Apply Method 2: Square root scaling for surrounding text score
             score_A = score_caption + math.sqrt(score_surround)
+            all_scores_dict[idx] = (score_A, matched_pairs)
             if score_A > 0.0:
                 path_a_raw_scores.append((idx, score_A, matched_pairs))
         
         path_a_raw_scores.sort(key=lambda x: x[1], reverse=True)
-        return path_a_raw_scores[:k_each]
+        top_k = path_a_raw_scores[:k_each]
+        if return_all:
+            return top_k, all_scores_dict
+        return top_k
 
-    def search_path_b(self, query_keywords: list, k_each=100) -> list:
+    def search_path_b(self, query_keywords: list, k_each=100, return_all=False) -> list:
         if not query_keywords or self.v_img is None:
+            if return_all:
+                return [], {}
             return []
         translated_query_keywords = []
         for kw in query_keywords:
@@ -263,17 +272,22 @@ class MultiModalRetriever:
         sim_matrix_B = q_img_embs @ self.v_img.T  # [len(query_keywords), num_images]
 
         path_b_raw_scores = []
+        all_scores_dict = {}
         for idx in range(len(self.meta)):
             score_B = 0.0
             for i in range(len(query_keywords)):
                 sim = float(sim_matrix_B[i, idx])
-                if sim >= 0.70:
+                if sim >= 0.24:
                     score_B += sim
+            all_scores_dict[idx] = score_B
             if score_B > 0.0:
                 path_b_raw_scores.append((idx, score_B))
 
         path_b_raw_scores.sort(key=lambda x: x[1], reverse=True)
-        return path_b_raw_scores[:k_each]
+        top_k = path_b_raw_scores[:k_each]
+        if return_all:
+            return top_k, all_scores_dict
+        return top_k
 
     def search(
         self,
@@ -292,36 +306,66 @@ class MultiModalRetriever:
             return {"query_keywords": [], "results": []}
 
         # 🛑 Path A: Text to Text Search
-        top_k1_scores = self.search_path_a(query_keywords, k_each=k_each)
+        top_k1_scores, all_scores_A = self.search_path_a(query_keywords, k_each=k_each, return_all=True)
+        if w_text == 0.0:
+            top_k1_scores = []
 
         # 🛑 Path B: Text to Image Search
-        top_k2_scores = self.search_path_b(query_keywords, k_each=k_each)
+        top_k2_scores, all_scores_B = self.search_path_b(query_keywords, k_each=k_each, return_all=True)
+        if w_image == 0.0:
+            top_k2_scores = []
 
         # 🛑 Merge & Output
         union_indices = set(idx for idx, _, _ in top_k1_scores) | set(idx for idx, _ in top_k2_scores)
         
-        # Min-Max Normalization Path A
-        scores_A_map = {idx: s for idx, s, _ in top_k1_scores}
-        matched_pairs_map = {idx: mp for idx, _, mp in top_k1_scores}
-        raw_A_values = list(scores_A_map.values())
+        # Get complete scores for all union indices (filling in 0.0 if not scored in the respective path)
+        scores_A_union = {}
+        matched_pairs_map = {}
+        for idx in union_indices:
+            score_A, matched_pairs = all_scores_A.get(idx, (0.0, []))
+            scores_A_union[idx] = score_A
+            matched_pairs_map[idx] = matched_pairs
+
+        scores_B_union = {}
+        for idx in union_indices:
+            score_B = all_scores_B.get(idx, 0.0)
+            scores_B_union[idx] = score_B
+
+        # Min-Max Normalization Path A over the union set
+        raw_A_values = list(scores_A_union.values())
         min_A = min(raw_A_values) if raw_A_values else 0.0
         max_A = max(raw_A_values) if raw_A_values else 0.0
 
-        # Min-Max Normalization Path B
-        scores_B_map = {idx: s for idx, s in top_k2_scores}
-        raw_B_values = list(scores_B_map.values())
+        # Min-Max Normalization Path B over the union set
+        raw_B_values = list(scores_B_union.values())
         min_B = min(raw_B_values) if raw_B_values else 0.0
         max_B = max(raw_B_values) if raw_B_values else 0.0
 
+        # Translate query keywords for CLIP text-to-image similarity
+        translated_query_keywords = []
+        for kw in query_keywords:
+            if self.translator:
+                translated = self.translator.translate(kw)
+                translated_query_keywords.append(translated)
+            else:
+                translated_query_keywords.append(kw)
+
+        q_img_embs = self.image_model.encode(
+            translated_query_keywords,
+            convert_to_numpy=True,
+            normalize_embeddings=True,
+            show_progress_bar=False,
+        ).astype("float32")
+
         fused_results = []
         for idx in union_indices:
-            raw_score_A = scores_A_map.get(idx, 0.0)
+            raw_score_A = scores_A_union[idx]
             if max_A > min_A:
                 norm_score_A = (raw_score_A - min_A) / (max_A - min_A)
             else:
                 norm_score_A = 1.0 if raw_score_A > 0.0 else 0.0
 
-            raw_score_B = scores_B_map.get(idx, 0.0)
+            raw_score_B = scores_B_union[idx]
             if max_B > min_B:
                 norm_score_B = (raw_score_B - min_B) / (max_B - min_B)
             else:
@@ -345,6 +389,15 @@ class MultiModalRetriever:
                 for p in matched_pairs
             ]
 
+            q_to_img_sims = []
+            for i, q_kw in enumerate(query_keywords):
+                sim_score = float(np.dot(q_img_embs[i], self.v_img[idx]))
+                q_to_img_sims.append({
+                    "q_kw": q_kw,
+                    "translated_kw": translated_query_keywords[i],
+                    "similarity": sim_score
+                })
+
             meta_item = self.meta[idx]
             fused_results.append({
                 "score": final_score,
@@ -357,6 +410,7 @@ class MultiModalRetriever:
                 "best_sur_chunk": None,
                 "matched_keywords": matched_kws,
                 "matched_details": matched_details,
+                "query_to_img_similarity": q_to_img_sims,
                 **meta_item,
             })
 
@@ -395,6 +449,7 @@ class MultiModalRetriever:
                 "s_keyword": 0.0,
                 "best_sur_chunk": None,
                 "matched_keywords": [],
+                "query_to_img_similarity": [],
                 **m,
             })
 
