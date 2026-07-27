@@ -33,10 +33,9 @@ os.makedirs(IMAGE_DIR, exist_ok=True)
 app.mount(f"/{IMAGE_DIR}", StaticFiles(directory=IMAGE_DIR), name=IMAGE_DIR)
     
 # agriculture_tech_docs/ folder is mounted at /agriculture_tech_docs
-if os.path.exists("agriculture_tech_docs"):
-    app.mount("/agriculture_tech_docs", StaticFiles(directory="agriculture_tech_docs"), name="docs")
-else:
-    print("Warning: 'agriculture_tech_docs' directory not found.")
+AGRICULTURE_DOCS_DIR = "example_pdfs"
+os.makedirs(AGRICULTURE_DOCS_DIR, exist_ok=True)
+app.mount(f"/{AGRICULTURE_DOCS_DIR}", StaticFiles(directory=AGRICULTURE_DOCS_DIR), name=AGRICULTURE_DOCS_DIR)
 
 # Templates directory
 templates = Jinja2Templates(directory="templates")
