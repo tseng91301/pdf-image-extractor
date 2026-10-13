@@ -76,8 +76,8 @@
               <circle cx="11" cy="11" r="8" />
               <line x1="21" y1="21" x2="16.65" y2="16.65" />
             </svg>
-            <input type="text" id="queryInput" class="search-input"
-              placeholder="輸入欲搜尋之關鍵字、問題或文獻語意（例如：山藥 晚熟 避開盛產期、地下塊莖特點、煞車皮磨損...）" autocomplete="off" required />
+            <input type="text" id="queryInput" class="search-input" placeholder="輸入欲搜尋之關鍵字、問題或文獻語意" autocomplete="off"
+              required />
             <button type="button" class="clear-btn" id="clearBtn" onclick="clearSearch()" title="清除">✕</button>
           </div>
           <button type="submit" class="search-btn" id="submitSearchBtn">
@@ -158,7 +158,7 @@
           <button class="close-panel-btn" onclick="toggleDiagnostics()">✕</button>
         </div>
         <div class="diagnostics-tabs">
-          <button class="tab-btn active" onclick="switchDiagTab('tokenizeTab')">1. 結巴斷詞分析</button>
+          <button class="tab-btn active" onclick="switchDiagTab('tokenizeTab')">1. Jieba 斷詞分析</button>
           <button class="tab-btn" onclick="switchDiagTab('bm25Tab')">2. BM25 獨立檢索</button>
           <button class="tab-btn" onclick="switchDiagTab('denseTab')">3. 向量語意獨立檢索</button>
           <button class="tab-btn" onclick="switchDiagTab('rerankTab')">4. Cross-Encoder 交叉注意力測試</button>
@@ -193,9 +193,7 @@
           <div class="diag-form-col">
             <input type="text" id="diagRerankQuery" class="diag-input" placeholder="Query: 例如 '山藥 晚熟 避開盛產期'"
               value="山藥 晚熟 避開盛產期">
-            <textarea id="diagRerankTexts" class="diag-textarea" rows="4" placeholder="輸入候選文獻（每行一篇）...">文獻: 27.山藥桃園4號 | 圖題: 藥植株 | 內文: 晚熟特性可延遲1-3個月收穫而不發芽，避開盛產期。
-文獻: 自行車手冊 | 圖題: 煞車安裝 | 內文: 扭力值為 8-10 Nm。
-文獻: 水稻專刊 | 圖題: 稻熱病 | 內文: 葉片出現紡錘形病斑。</textarea>
+            <textarea id="diagRerankTexts" class="diag-textarea" rows="4" placeholder="輸入候選文獻（每行一篇）..."></textarea>
             <button class="btn-action" onclick="runDiagRerank()">執行 Cross-Encoder 相關度交叉評分</button>
           </div>
           <div class="diag-output" id="diagRerankOutput">點擊執行查看精排 Logit 與 Sigmoid 機率...</div>
