@@ -1,0 +1,25 @@
+# ==============================================================================
+# requirements.paddle.txt
+# Dedicated virtual environment (venv_paddle) for PDF extraction and OCR pipeline.
+#
+# Installation:
+#   python3 -m venv venv_paddle
+#   ./venv_paddle/bin/pip install -r requirements.paddle.txt
+# ==============================================================================
+
+--extra-index-url https://www.paddlepaddle.org.cn/packages/stable/cu126/
+
+# Core Paddle & OCR engines
+paddlepaddle-gpu==3.2.0
+paddleocr==3.4.0
+paddlex==3.4.2
+
+# PDF & Computer Vision processing
+PyMuPDF>=1.24.0
+opencv-python>=4.8.0
+Pillow>=10.0.0
+numpy>=1.24.0
+
+# Geometric and polygon operations used by OCR detectors
+pyclipper>=1.3.0
+shapely>=2.0.0

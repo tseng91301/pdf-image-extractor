@@ -1,0 +1,9 @@
+venv/
+venv_paddle/
+agriculture_tech_docs
+image_data
+image_data_test/
+index_cache
+index_cache_test/
+test_pdfs/
+__pycache__

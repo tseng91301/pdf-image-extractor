@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Multimodal Neural Document & Image Search</title>
+  <meta name="description"
+    content="State-of-the-art hybrid document image search combining BM25, Dense Vector Embeddings, and Cross-Encoder Reranker.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Noto+Sans+TC:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;500;600&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+
+<body class="dark-theme">
+  <!-- Background Aura Glows -->
+  <div class="aura-glow glow-1"></div>
+  <div class="aura-glow glow-2"></div>
+  <div class="aura-glow glow-3"></div>
+
+  <div class="app-container">
+    <!-- Navigation Bar -->
+    <header class="app-header">
+      <div class="brand-group">
+        <div class="brand-logo">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+            <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z" />
+            <path d="M6 6h10" />
+            <path d="M6 10h10" />
+            <circle cx="16" cy="16" r="3" />
+            <path d="m18.5 18.5 2.5 2.5" />
+          </svg>
+        </div>
+        <div class="brand-text">
+          <h1>DOC-IMG <span class="gradient-text">HYBRID SEARCH</span></h1>
+          <p class="brand-subtitle">BM25 + BGE Dense Vectors + Cross-Encoder Reranker</p>
+        </div>
+      </div>
+
+      <div class="header-actions">
+        <div class="status-indicator" id="statusBadge">
+          <span class="pulse-dot"></span>
+          <span id="statusText">載入系統中...</span>
+        </div>
+        <button class="nav-btn" id="docsBtn" onclick="window.open('/docs', '_blank')">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+            <polyline points="14 2 14 8 20 8" />
+            <line x1="16" y1="13" x2="8" y2="13" />
+            <line x1="16" y1="17" x2="8" y2="17" />
+            <polyline points="10 9 9 9 8 9" />
+          </svg>
+          API Docs (Swagger)
+        </button>
+        <button class="nav-btn secondary" id="diagnosticsToggleBtn" onclick="toggleDiagnostics()">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="3" />
+            <path
+              d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
+          </svg>
+          獨立功能診斷台
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Search Area -->
+    <main class="main-content">
+      <section class="search-hero">
+        <form class="search-bar-wrapper" id="searchForm" onsubmit="handleSearch(event)">
+          <div class="search-input-box">
+            <svg class="search-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              stroke-width="2.5">
+              <circle cx="11" cy="11" r="8" />
+              <line x1="21" y1="21" x2="16.65" y2="16.65" />
+            </svg>
+            <input type="text" id="queryInput" class="search-input"
+              placeholder="輸入欲搜尋之關鍵字、問題或文獻語意（例如：山藥 晚熟 避開盛產期、地下塊莖特點、煞車皮磨損...）" autocomplete="off" required />
+            <button type="button" class="clear-btn" id="clearBtn" onclick="clearSearch()" title="清除">✕</button>
+          </div>
+          <button type="submit" class="search-btn" id="submitSearchBtn">
+            <span>開始檢索</span>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <polyline points="9 18 15 12 9 6" />
+            </svg>
+          </button>
+        </form>
+
+        <!-- Example Query Chips -->
+        <div class="query-chips">
+          <span class="chips-label">推薦範例查詢：</span>
+          <button class="chip" onclick="applyPreset('山藥地下塊莖 肉色雪白 不氧化')">🥔 山藥塊莖肉色與黏度特點</button>
+          <button class="chip" onclick="applyPreset('桃園4號 陽明山 砂質壤土')">🌱 桃園4號適栽土壤環境</button>
+          <button class="chip" onclick="applyPreset('稻熱病 葉片紡錘形病斑 防治藥劑')">🌾 稻熱病病斑與藥劑</button>
+          <button class="chip" onclick="applyPreset('藍莓組織培養')">藍莓組織培養</button>
+        </div>
+
+        <!-- Filter & Parameter Drawer Accordion -->
+        <details class="params-accordion" id="paramsDrawer">
+          <summary class="params-summary">
+            <span class="summary-left">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" />
+              </svg>
+              <span>檢索模型參數與加權微調 (Search Hyperparameters)</span>
+            </span>
+            <span class="summary-badge" id="paramSummaryBadge">Top 10 | Recall 30 | Cross-Encoder: ON</span>
+          </summary>
+          <div class="params-grid">
+            <div class="param-card">
+              <label for="topNInput">最終呈現筆數 (Top N): <span id="topNVal">10</span></label>
+              <input type="range" id="topNInput" min="1" max="50" value="10" oninput="updateParamLabels()">
+            </div>
+            <div class="param-card">
+              <label for="recallKInput">第一階段候選粗篩數 (Recall K): <span id="recallKVal">30</span></label>
+              <input type="range" id="recallKInput" min="5" max="100" value="30" oninput="updateParamLabels()">
+            </div>
+            <div class="param-card">
+              <label for="bm25WeightInput">BM25 關鍵字權重: <span id="bm25WeightVal">1.0</span></label>
+              <input type="range" id="bm25WeightInput" min="0" max="3" step="0.1" value="1.0"
+                oninput="updateParamLabels()">
+            </div>
+            <div class="param-card">
+              <label for="denseWeightInput">Dense 語意向量權重: <span id="denseWeightVal">1.0</span></label>
+              <input type="range" id="denseWeightInput" min="0" max="3" step="0.1" value="1.0"
+                oninput="updateParamLabels()">
+            </div>
+            <div class="param-card">
+              <label for="captionWeightInput">圖片標題權重 (Caption Weight): <span id="captionWeightVal">2.0</span></label>
+              <input type="range" id="captionWeightInput" min="0" max="4" step="0.1" value="2.0"
+                oninput="updateParamLabels()">
+            </div>
+            <div class="param-card">
+              <label for="contextWeightInput">周圍內文權重 (Context Weight): <span id="contextWeightVal">1.0</span></label>
+              <input type="range" id="contextWeightInput" min="0" max="3" step="0.1" value="1.0"
+                oninput="updateParamLabels()">
+            </div>
+            <div class="param-card toggle-card">
+              <label class="switch-label">
+                <input type="checkbox" id="rerankToggle" checked onchange="updateParamLabels()">
+                <span class="switch-slider"></span>
+                <span class="switch-text">啟用 Cross-Encoder 深度重排序 (Reranker)</span>
+              </label>
+            </div>
+          </div>
+        </details>
+      </section>
+
+      <!-- Diagnostics Panel (Hidden by default) -->
+      <section class="diagnostics-panel" id="diagnosticsSection" style="display:none;">
+        <div class="panel-header">
+          <div class="panel-title-group">
+            <h3>🔬 獨立模組功能測試台 (Module Isolation & Diagnostics)</h3>
+            <p>可在此個別排查斷詞器、BM25 全文打分、向量語意相似度與 Cross-Encoder 重排序</p>
+          </div>
+          <button class="close-panel-btn" onclick="toggleDiagnostics()">✕</button>
+        </div>
+        <div class="diagnostics-tabs">
+          <button class="tab-btn active" onclick="switchDiagTab('tokenizeTab')">1. 結巴斷詞分析</button>
+          <button class="tab-btn" onclick="switchDiagTab('bm25Tab')">2. BM25 獨立檢索</button>
+          <button class="tab-btn" onclick="switchDiagTab('denseTab')">3. 向量語意獨立檢索</button>
+          <button class="tab-btn" onclick="switchDiagTab('rerankTab')">4. Cross-Encoder 交叉注意力測試</button>
+        </div>
+
+        <div class="tab-body" id="tokenizeTab">
+          <div class="diag-form-row">
+            <input type="text" id="diagTokInput" class="diag-input" placeholder="輸入欲測試斷詞的句子..."
+              value="山藥桃園4號地下塊莖特點與栽培效益">
+            <button class="btn-action" onclick="runDiagTokenize()">執行斷詞分析</button>
+          </div>
+          <div class="diag-output" id="diagTokOutput">點擊執行查看斷詞結果...</div>
+        </div>
+
+        <div class="tab-body" id="bm25Tab" style="display:none;">
+          <div class="diag-form-row">
+            <input type="text" id="diagBm25Input" class="diag-input" placeholder="輸入 BM25 測試查詢詞..." value="山藥 塊莖 肉色雪白">
+            <button class="btn-action" onclick="runDiagBM25()">執行獨立 BM25 檢索</button>
+          </div>
+          <div class="diag-output" id="diagBm25Output">點擊執行查看 BM25 打分與 Token 比對...</div>
+        </div>
+
+        <div class="tab-body" id="denseTab" style="display:none;">
+          <div class="diag-form-row">
+            <input type="text" id="diagDenseInput" class="diag-input" placeholder="輸入語意測試查詢詞..." value="陽明山晚熟品種產量">
+            <button class="btn-action" onclick="runDiagDense()">執行獨立向量檢索</button>
+          </div>
+          <div class="diag-output" id="diagDenseOutput">點擊執行查看語意餘弦相似度...</div>
+        </div>
+
+        <div class="tab-body" id="rerankTab" style="display:none;">
+          <div class="diag-form-col">
+            <input type="text" id="diagRerankQuery" class="diag-input" placeholder="Query: 例如 '山藥 晚熟 避開盛產期'"
+              value="山藥 晚熟 避開盛產期">
+            <textarea id="diagRerankTexts" class="diag-textarea" rows="4" placeholder="輸入候選文獻（每行一篇）...">文獻: 27.山藥桃園4號 | 圖題: 藥植株 | 內文: 晚熟特性可延遲1-3個月收穫而不發芽，避開盛產期。
+文獻: 自行車手冊 | 圖題: 煞車安裝 | 內文: 扭力值為 8-10 Nm。
+文獻: 水稻專刊 | 圖題: 稻熱病 | 內文: 葉片出現紡錘形病斑。</textarea>
+            <button class="btn-action" onclick="runDiagRerank()">執行 Cross-Encoder 相關度交叉評分</button>
+          </div>
+          <div class="diag-output" id="diagRerankOutput">點擊執行查看精排 Logit 與 Sigmoid 機率...</div>
+        </div>
+      </section>
+
+      <!-- Search Metrics Bar -->
+      <section class="results-header" id="resultsHeader" style="display:none;">
+        <div class="results-meta">
+          <h2>檢索結果 (<span id="resultsCount">0</span> 筆)</h2>
+          <div class="latency-tags" id="latencyTags">
+            <span class="latency-badge total" id="totalLatencyBadge">總耗時: 0 ms</span>
+            <span class="latency-badge sub" id="bm25LatencyBadge">BM25: 0ms</span>
+            <span class="latency-badge sub" id="denseLatencyBadge">Dense: 0ms</span>
+            <span class="latency-badge sub" id="rerankLatencyBadge">Rerank: 0ms</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Loading State -->
+      <div class="loading-container" id="loadingState" style="display:none;">
+        <div class="loading-spinner"></div>
+        <p class="loading-text">正在進行雙塔語意比對與 Cross-Encoder 深度重排序...</p>
+      </div>
+
+      <!-- Results Grid Container -->
+      <section class="results-grid" id="resultsGrid"></section>
+
+      <!-- Empty State -->
+      <div class="empty-state" id="emptyState">
+        <div class="empty-icon">🔍</div>
+        <h3>輸入查詢關鍵字以探索圖文資料庫</h3>
+        <p>系統結合詞彙精準度 (BM25) 與深層神經語意向量，自動聚合多段周圍內文進行多階段檢索。</p>
+      </div>
+    </main>
+
+    <!-- Lightbox Modal for High-Res Image & Details -->
+    <div class="modal-backdrop" id="imageModal" onclick="closeModal(event)">
+      <div class="modal-content" onclick="event.stopPropagation()">
+        <button class="modal-close-btn" onclick="closeModalDirect()">✕</button>
+        <div class="modal-body" id="modalBody"></div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/static/app.js"></script>
+</body>
+
+</html>
