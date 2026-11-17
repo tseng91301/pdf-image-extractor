@@ -117,8 +117,24 @@ def main():
         default=False,
         help="Force CPU execution for layout detection and OCR."
     )
+    parser.add_argument(
+        "--gpu-id",
+        type=str,
+        default=None,
+        help="Explicit GPU device ID(s) to use, e.g. '0' or '0,1' (default: auto-detected compatible GPUs)."
+    )
 
     args = parser.parse_args()
+
+    # Configure GPU compatibility before loading PaddlePaddle
+    if args.no_gpu:
+        os.environ["CUDA_VISIBLE_DEVICES"] = ""
+    elif args.gpu_id is not None:
+        os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
+        os.environ["CUDA_VISIBLE_DEVICES"] = str(args.gpu_id)
+    else:
+        from core.converter.gpu_config import setup_paddle_gpu_environment
+        setup_paddle_gpu_environment()
 
     # Determine source directory
     source_dir = args.source_dir or args.source_dir_pos

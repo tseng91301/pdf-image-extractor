@@ -7,3 +7,4 @@ index_cache
 index_cache_test/
 test_pdfs/
 __pycache__
+tmp/

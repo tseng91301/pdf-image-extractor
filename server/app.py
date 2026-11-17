@@ -2,7 +2,11 @@
 
 import logging
 import os
+import sys
 import time
+import json
+import threading
+import glob
 from contextlib import asynccontextmanager
 from typing import List, Optional, Dict, Any
 
@@ -30,9 +34,83 @@ logging.basicConfig(
 logger = logging.getLogger("server")
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-IMAGE_DATA_DIR = os.environ.get("IMAGE_DATA_DIR", os.path.join(BASE_DIR, "image_data_test"))
-CACHE_DIR = os.environ.get("CACHE_DIR", os.path.join(BASE_DIR, "index_cache_test"))
+IMAGE_DATA_DIR = os.environ.get("IMAGE_DATA_DIR", os.path.join(BASE_DIR, "image_data"))
+CACHE_DIR = os.environ.get("CACHE_DIR", os.path.join(BASE_DIR, "index_cache"))
 WEB_DIR = os.path.join(BASE_DIR, "web")
+BENCHMARK_DIR = os.path.join(BASE_DIR, "benchmark")
+DATASETS_DIR = os.path.join(BENCHMARK_DIR, "datasets")
+REPORTS_DIR = os.path.join(BENCHMARK_DIR, "reports")
+os.makedirs(DATASETS_DIR, exist_ok=True)
+os.makedirs(REPORTS_DIR, exist_ok=True)
+
+# Global background benchmark execution state
+benchmark_state: Dict[str, Any] = {
+    "status": "idle",  # "idle" | "running" | "completed" | "error"
+    "dataset": None,
+    "report_name": None,
+    "progress_percent": 0.0,
+    "current_arm": "",
+    "arm_index": 0,
+    "total_arms": 4,
+    "query_index": 0,
+    "total_queries": 0,
+    "start_time": None,
+    "elapsed_seconds": 0.0,
+    "error": None,
+    "latest_report_file": "report_v3_clean.json"
+}
+benchmark_lock = threading.Lock()
+benchmark_thread: Optional[threading.Thread] = None
+benchmark_cancel_event = threading.Event()
+
+
+def _run_benchmark_worker(dataset_filename: str, report_filename: Optional[str]):
+    global benchmark_state
+    from benchmark.run_benchmark import run_benchmark
+    dataset_path = os.path.join(DATASETS_DIR, dataset_filename)
+    output_path = os.path.join(REPORTS_DIR, report_filename) if report_filename else None
+
+    start_time = time.time()
+
+    def progress_cb(info: Dict[str, Any]):
+        with benchmark_lock:
+            benchmark_state["current_arm"] = info.get("current_arm", "")
+            benchmark_state["arm_index"] = info.get("arm_index", 0)
+            benchmark_state["total_arms"] = info.get("total_arms", 4)
+            benchmark_state["query_index"] = info.get("query_index", 0)
+            benchmark_state["total_queries"] = info.get("total_queries", 0)
+
+            total_work = benchmark_state["total_arms"] * max(benchmark_state["total_queries"], 1)
+            done_work = (benchmark_state["arm_index"] - 1) * benchmark_state["total_queries"] + benchmark_state["query_index"]
+            benchmark_state["progress_percent"] = round((done_work / total_work) * 100, 1)
+            benchmark_state["elapsed_seconds"] = round(time.time() - start_time, 1)
+
+    try:
+        benchmark_cancel_event.clear()
+        report = run_benchmark(
+            dataset_path=dataset_path,
+            output_path=output_path,
+            save_report=True,
+            progress_callback=progress_cb,
+            cancel_event=benchmark_cancel_event
+        )
+        saved_file = os.path.basename(output_path) if output_path else f"report_{time.strftime('%Y%m%d_%H%M%S')}.json"
+        with benchmark_lock:
+            benchmark_state["status"] = "completed"
+            benchmark_state["progress_percent"] = 100.0
+            benchmark_state["elapsed_seconds"] = round(time.time() - start_time, 1)
+            benchmark_state["latest_report_file"] = saved_file
+            benchmark_state["error"] = None
+    except InterruptedError:
+        with benchmark_lock:
+            benchmark_state["status"] = "idle"
+            benchmark_state["error"] = "評測已由使用者中斷。"
+    except Exception as e:
+        logger.exception("Benchmark execution error")
+        with benchmark_lock:
+            benchmark_state["status"] = "error"
+            benchmark_state["error"] = str(e)
+
 
 
 @asynccontextmanager
@@ -236,6 +314,184 @@ async def debug_rerank(
 
 
 # ----------------------------------------------------
+# 4.5. Benchmark Management & Evaluation Endpoints
+# ----------------------------------------------------
+@app.get(
+    "/api/benchmark/datasets",
+    summary="List Benchmark Datasets",
+    description="Returns available benchmark evaluation datasets in benchmark/datasets/ directory."
+)
+async def list_benchmark_datasets():
+    datasets = []
+    if os.path.exists(DATASETS_DIR):
+        for fname in sorted(os.listdir(DATASETS_DIR)):
+            if not fname.endswith(".json"):
+                continue
+            fpath = os.path.join(DATASETS_DIR, fname)
+            try:
+                st = os.stat(fpath)
+                with open(fpath, "r", encoding="utf-8") as f:
+                    d = json.load(f)
+                queries = d.get("queries", [])
+                dist = d.get("dataset_summary", {}).get("distribution", {})
+                if not dist:
+                    dist = {
+                        f"level{i}": sum(1 for q in queries if q.get("difficulty_level") == i)
+                        for i in range(1, 5)
+                    }
+                datasets.append({
+                    "filename": fname,
+                    "total_queries": len(queries),
+                    "distribution": dist,
+                    "size_bytes": st.st_size,
+                    "modified_time": time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(st.st_mtime))
+                })
+            except Exception as e:
+                logger.warning(f"Error reading dataset {fname}: {e}")
+    return datasets
+
+
+@app.get(
+    "/api/benchmark/reports",
+    summary="List Benchmark Reports",
+    description="Returns historical evaluation benchmark reports stored in benchmark/reports/."
+)
+async def list_benchmark_reports():
+    reports = []
+    if os.path.exists(REPORTS_DIR):
+        for fname in sorted(os.listdir(REPORTS_DIR)):
+            if not fname.endswith(".json"):
+                continue
+            fpath = os.path.join(REPORTS_DIR, fname)
+            try:
+                st = os.stat(fpath)
+                with open(fpath, "r", encoding="utf-8") as f:
+                    d = json.load(f)
+                summary = d.get("summary", {})
+                if not summary and "arms" in d:
+                    summary = {
+                        "ablation_comparison": {
+                            a: {
+                                "hit_at_1": round(v.get("overall_metrics", {}).get("Hit@1", 0), 4),
+                                "hit_at_5": round(v.get("overall_metrics", {}).get("Hit@5", 0), 4),
+                                "mrr_at_10": round(v.get("overall_metrics", {}).get("MRR@10", 0), 4),
+                                "latency_mean_ms": round(v.get("latency_ms", {}).get("mean", 0), 2)
+                            }
+                            for a, v in d["arms"].items()
+                        }
+                    }
+                reports.append({
+                    "filename": fname,
+                    "benchmark_time": d.get("benchmark_time", ""),
+                    "dataset_file": d.get("dataset_file", ""),
+                    "total_queries": d.get("dataset_summary", {}).get("total_queries", 0),
+                    "summary": summary,
+                    "size_bytes": st.st_size,
+                    "modified_time": time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(st.st_mtime)),
+                    "mtime_epoch": st.st_mtime
+                })
+            except Exception as e:
+                logger.warning(f"Error reading report {fname}: {e}")
+    reports.sort(key=lambda x: x["mtime_epoch"], reverse=True)
+    return reports
+
+
+@app.get(
+    "/api/benchmark/reports/{report_name}",
+    summary="Get Full Benchmark Report",
+    description="Retrieves the detailed JSON content of a specific benchmark report."
+)
+async def get_benchmark_report(report_name: str):
+    clean_name = os.path.basename(report_name)
+    report_path = os.path.join(REPORTS_DIR, clean_name)
+    if not os.path.exists(report_path):
+        raise HTTPException(status_code=404, detail=f"Report '{clean_name}' not found")
+    try:
+        with open(report_path, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to load report: {str(e)}")
+
+
+@app.post(
+    "/api/benchmark/run",
+    summary="Trigger Benchmark Evaluation",
+    description="Executes a 4-arm ablation evaluation in the background on the selected dataset."
+)
+async def trigger_benchmark_run(
+    dataset_filename: str = Query(..., description="Dataset filename in benchmark/datasets/"),
+    report_name: Optional[str] = Query(default=None, description="Optional custom report filename")
+):
+    global benchmark_thread, benchmark_state
+    with benchmark_lock:
+        if benchmark_state["status"] == "running":
+            raise HTTPException(status_code=400, detail="A benchmark task is currently running. Please wait or cancel.")
+
+        clean_dataset = os.path.basename(dataset_filename)
+        dataset_path = os.path.join(DATASETS_DIR, clean_dataset)
+        if not os.path.exists(dataset_path):
+            raise HTTPException(status_code=404, detail=f"Dataset '{clean_dataset}' not found")
+
+        clean_report = None
+        if report_name:
+            clean_report = os.path.basename(report_name)
+            if not clean_report.endswith(".json"):
+                clean_report += ".json"
+
+        benchmark_state["status"] = "running"
+        benchmark_state["dataset"] = clean_dataset
+        benchmark_state["report_name"] = clean_report
+        benchmark_state["progress_percent"] = 0.0
+        benchmark_state["current_arm"] = "BM25_Only"
+        benchmark_state["arm_index"] = 1
+        benchmark_state["query_index"] = 0
+        benchmark_state["total_queries"] = 0
+        benchmark_state["start_time"] = time.time()
+        benchmark_state["elapsed_seconds"] = 0.0
+        benchmark_state["error"] = None
+
+    benchmark_thread = threading.Thread(
+        target=_run_benchmark_worker,
+        args=(clean_dataset, clean_report),
+        daemon=True
+    )
+    benchmark_thread.start()
+
+    return {
+        "status": "started",
+        "dataset": clean_dataset,
+        "report_name": clean_report
+    }
+
+
+@app.get(
+    "/api/benchmark/run/status",
+    summary="Get Benchmark Execution Status",
+    description="Polls real-time progress of running benchmark."
+)
+async def get_benchmark_run_status():
+    with benchmark_lock:
+        st = dict(benchmark_state)
+        if st["status"] == "running" and st["start_time"]:
+            st["elapsed_seconds"] = round(time.time() - st["start_time"], 1)
+        return st
+
+
+@app.post(
+    "/api/benchmark/run/cancel",
+    summary="Cancel Benchmark Execution",
+    description="Requests cancellation of the currently running benchmark."
+)
+async def cancel_benchmark_run():
+    global benchmark_cancel_event, benchmark_state
+    with benchmark_lock:
+        if benchmark_state["status"] != "running":
+            return {"status": "not_running", "message": "No benchmark currently running."}
+        benchmark_cancel_event.set()
+        return {"status": "cancelling", "message": "Benchmark cancellation signal sent."}
+
+
+# ----------------------------------------------------
 # 5. Serve Web Frontend
 # ----------------------------------------------------
 if os.path.exists(WEB_DIR):
@@ -246,7 +502,19 @@ if os.path.exists(WEB_DIR):
         index_file = os.path.join(WEB_DIR, "index.html")
         if os.path.exists(index_file):
             with open(index_file, "r", encoding="utf-8") as f:
-                return HTMLResponse(content=f.read())
+                content = f.read()
+            # Cache buster to ensure browser always gets fresh CSS and JS
+            t_str = str(int(time.time()))
+            content = content.replace('src="/static/app.js"', f'src="/static/app.js?v={t_str}"')
+            content = content.replace('href="/static/style.css"', f'href="/static/style.css?v={t_str}"')
+            return HTMLResponse(
+                content=content,
+                headers={
+                    "Cache-Control": "no-cache, no-store, must-revalidate",
+                    "Pragma": "no-cache",
+                    "Expires": "0"
+                }
+            )
         return HTMLResponse("<h3>Web UI not found</h3>", status_code=404)
 
 

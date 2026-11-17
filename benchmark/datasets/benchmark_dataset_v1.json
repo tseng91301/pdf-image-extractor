@@ -1,0 +1,2561 @@
+{
+  "version": "3.0",
+  "created_at": "2026-11-17T10:00:00Z",
+  "scenario": "Multimodal Image Retrieval Extension for Text RAG (Agnostic Document Benchmark)",
+  "dataset_summary": {
+    "total_queries": 160,
+    "distribution": {
+      "level1_exact_keyword": 50,
+      "level2_semantic_qa": 60,
+      "level3_visual_description": 40,
+      "level4_hard_negative": 10
+    }
+  },
+  "queries": [
+    {
+      "query_id": "Q_0001",
+      "query": "秧苗期耐寒性第3 級",
+      "difficulty_level": 1,
+      "level_name": "Level 1 (核心實體與圖表標題詞)",
+      "source_doc": "108年3月桃園區農業專訊第107期.pdf",
+      "target_image_id": "Ce9VdiuleU_image_0001",
+      "ground_truth": [
+        {
+          "image_id": "Ce9VdiuleU_image_0001",
+          "relevance_score": 3,
+          "reason": "精確對應圖題「圖3.秧苗期耐寒性第3 級。中抗(MR)。」"
+        },
+        {
+          "image_id": "Ce9VdiuleU_image_0004",
+          "relevance_score": 2,
+          "reason": "同屬「水稻耐寒性」相關技術主題之延伸圖表"
+        }
+      ]
+    },
+    {
+      "query_id": "Q_0002",
+      "query": "農業氣象YouTube觀看畫面",
+      "difficulty_level": 1,
+      "level_name": "Level 1 (核心實體與圖表標題詞)",
+      "source_doc": "109_6_第112期_臺東區農業專訊/112-09.pdf",
+      "target_image_id": "RrozXFFqpu_image_0005",
+      "ground_truth": [
+        {
+          "image_id": "RrozXFFqpu_image_0005",
+          "relevance_score": 3,
+          "reason": "精確對應圖題「圖6.「農業氣象」YouTube觀看畫面」"
+        }
+      ]
+    },
+    {
+      "query_id": "Q_0003",
+      "query": "百合病毒病品種Gracia",
+      "difficulty_level": 1,
+      "level_name": "Level 1 (核心實體與圖表標題詞)",
+      "source_doc": "2016_108-百合重要病毒病簡介與診斷鑑定.pdf",
+      "target_image_id": "C2WihLfga2_image_0004",
+      "ground_truth": [
+        {
+          "image_id": "C2WihLfga2_image_0004",
+          "relevance_score": 3,
+          "reason": "精確對應圖題「Gracia（左中右）」"
+        },
+        {
+          "image_id": "C2WihLfga2_image_0000",
+          "relevance_score": 2,
+          "reason": "同屬「百合病毒病」相關技術主題圖表"
+        }
+      ]
+    },
+    {
+      "query_id": "Q_0004",
+      "query": "蒴果橢圓形或圓錐形",
+      "difficulty_level": 1,
+      "level_name": "Level 1 (核心實體與圖表標題詞)",
+      "source_doc": "106年12月桃園區農業專訊第102期.pdf",
+      "target_image_id": "HqlXrlpmae_image_0006",
+      "ground_truth": [
+        {
+          "image_id": "HqlXrlpmae_image_0006",
+          "relevance_score": 3,
+          "reason": "精確對應圖題「蒴果橢圓形或圓錐形。」"
+        }
+      ]
+    },
+    {
+      "query_id": "Q_0005",
+      "query": "褐蛉卵及草蛉卵",
+      "difficulty_level": 1,
+      "level_name": "Level 1 (核心實體與圖表標題詞)",
+      "source_doc": "苗栗區農業專訊第88期(10812).pdf",
+      "target_image_id": "XUQgHg4Ybb_image_0006",
+      "ground_truth": [
+        {
+          "image_id": "XUQgHg4Ybb_image_0006",
+          "relevance_score": 3,
+          "reason": "精確對應圖題「圖一、褐蛉卵(左)及草蛉卵(右)。」"
+        },
+        {
+          "image_id": "XUQgHg4Ybb_image_0008",
+          "relevance_score": 2,
+          "reason": "同屬「天敵昆蟲形態」相關技術主題之延伸圖表"
+        }
+      ]
+    },
+    {
+      "query_id": "Q_0006",
+      "query": "油茶嫁接苗田間培育",
+      "difficulty_level": 1,
+      "level_name": "Level 1 (核心實體與圖表標題詞)",
+      "source_doc": "大果油茶嫁接技術與生產體系建立 (王瑞章、張錦興)105-3.pdf",
+      "target_image_id": "Rhs7HVWbxm_image_0008",
+      "ground_truth": [
+        {
+          "image_id": "Rhs7HVWbxm_image_0008",
+          "relevance_score": 3,
+          "reason": "精確對應圖題「6 油茶嫁接苗田間培育」"
+        },
+        {
+          "image_id": "Rhs7HVWbxm_image_0006",
+          "relevance_score": 2,
+          "reason": "同屬「油茶育苗」相關技術主題之延伸圖表"
+        }
+      ]
+    },
+    {
+      "query_id": "Q_0007",
+      "query": "Pseudomonas 在KBZ半選擇性培養基菌落",
+      "difficulty_level": 1,
+      "level_name": "Level 1 (核心實體與圖表標題詞)",
+      "source_doc": "種苗科技專訊第117期.pdf",
+      "target_image_id": "Tw6IDeggrM_image_0020",
+      "ground_truth": [
+        {
+          "image_id": "Tw6IDeggrM_image_0020",
+          "relevance_score": 3,
+          "reason": "精確對應圖題「圖1. Pseudomonas spp. 在KBZ 半選擇性培養基上呈粉紅色...菌落」"
+        },
+        {
+          "image_id": "Tw6IDeggrM_image_0000",
+          "relevance_score": 2,
+          "reason": "同屬「細菌培養診斷」技術主題圖表"
+        }
+      ]
+    },
+    {
+      "query_id": "Q_0008",
+      "query": "桃園3 號新香米自有品牌",
+      "difficulty_level": 1,
+      "level_name": "Level 1 (核心實體與圖表標題詞)",
+      "source_doc": "106年12月桃園區農業專訊第102期.pdf",
+      "target_image_id": "HqlXrlpmae_image_0000",
+      "ground_truth": [
+        {
+          "image_id": "HqlXrlpmae_image_0000",
+          "relevance_score": 3,
+          "reason": "精確對應圖題「桃園3 號新香米於各產地建立自有品牌。」"
+        }
+      ]
+    },
+    {
+      "query_id": "Q_0009",
+      "query": "細葉碎米薺食用與野菜利用",
+      "difficulty_level": 1,
+      "level_name": "Level 1 (核心實體與圖表標題詞)",
+      "source_doc": "花蓮農業專訊118期-內文.pdf",
+      "target_image_id": "v5ni4EKRQI_image_0033",
+      "ground_truth": [
+        {
+          "image_id": "v5ni4EKRQI_image_0033",
+          "relevance_score": 3,
+          "reason": "精確對應圖題「15 細葉碎米薺帶有芥末般的特殊風味...」"
+        }
+      ]
+    },
+    {
+      "query_id": "Q_0010",
+      "query": "甘藷塊根發生裂藷情形",
+      "difficulty_level": 1,
+      "level_name": "Level 1 (核心實體與圖表標題詞)",
+      "source_doc": "108年3月桃園區農業專訊第107期.pdf",
+      "target_image_id": "Ce9VdiuleU_image_0020",
+      "ground_truth": [
+        {
+          "image_id": "Ce9VdiuleU_image_0020",
+          "relevance_score": 3,
+          "reason": "精確對應圖題「圖3.土壤乾濕變化劇烈造成甘藷塊根發生裂藷情形。」"
+        }
+      ]
+    },
+    {
+      "query_id": "Q_0011",
+      "query": "鳳梨釋迦超市單果包裝販售情形",
+      "difficulty_level": 1,
+      "level_name": "Level 1 (核心實體與圖表標題詞)",
+      "source_doc": "109_6_第112期_臺東區農業專訊/112-06.pdf",
+      "target_image_id": "q9mgq9W3Xf_image_0003",
+      "ground_truth": [
+        {
+          "image_id": "q9mgq9W3Xf_image_0003",
+          "relevance_score": 3,
+          "reason": "精確對應圖題「圖5.台灣鳳梨釋迦於馬來西亞吉隆坡NSK(左)及Aeon(右)超市單果包裝販售情形」"
+        }
+      ]
+    },
+    {
+      "query_id": "Q_0012",
+      "query": "大花蕙蘭切花採收後處理包裝情形",
+      "difficulty_level": 1,
+      "level_name": "Level 1 (核心實體與圖表標題詞)",
+      "source_doc": "臺中區農業專訊第102期(107年09月)-發行版.pdf",
+      "target_image_id": "HkjqHmYxQm_image_0031",
+      "ground_truth": [
+        {
+          "image_id": "HkjqHmYxQm_image_0031",
+          "relevance_score": 3,
+          "reason": "精確對應圖題「大花蕙蘭切花採收後處理包裝情形」"
+        }
+      ]
+    },
+    {
+      "query_id": "Q_0013",
+      "query": "斜紋夜盜蟲嚴重危害高麗菜",
+      "difficulty_level": 1,
+      "level_name": "Level 1 (核心實體與圖表標題詞)",
+      "source_doc": "苗栗區農業專訊第81期(10703).pdf",
+      "target_image_id": "AToCzu7ebu_image_0042",
+      "ground_truth": [
+        {
+          "image_id": "AToCzu7ebu_image_0042",
+          "relevance_score": 3,
+          "reason": "精確對應圖題「斜紋夜盜蟲嚴重危害高麗菜」"
+        }
+      ]
+    },
+    {
+      "query_id": "Q_0014",
+      "query": "秋行軍蟲危害葉片小窗孔狀食痕",
+      "difficulty_level": 1,
+      "level_name": "Level 1 (核心實體與圖表標題詞)",
+      "source_doc": "玉米蟲蟲危機～認識秋行軍蟲 (黃秀雯、張淳淳、陳盈丞、陳昇寬111-3.pdf",
+      "target_image_id": "uCHixu7xWC_image_0000",
+      "ground_truth": [
+        {
+          "image_id": "uCHixu7xWC_image_0000",
+          "relevance_score": 3,
+          "reason": "精確對應圖題「1 秋行軍蟲危害葉片初期呈小窗孔狀食痕...」"
+        },
+        {
+          "image_id": "uCHixu7xWC_image_0007",
+          "relevance_score": 2,
+          "reason": "同屬「秋行軍蟲各發育期」技術圖表"
+        }
+      ]
+    },
+    {
+      "query_id": "Q_0015",
+      "query": "PLAMV花苞Manissa",
+      "difficulty_level": 1,
+      "level_name": "Level 1 (核心實體與圖表標題詞)",
+      "source_doc": "2016_108-百合重要病毒病簡介與診斷鑑定.pdf",
+      "target_image_id": "C2WihLfga2_image_0008",
+      "ground_truth": [
+        {
+          "image_id": "C2WihLfga2_image_0008",
+          "relevance_score": 3,
+          "reason": "精確對應圖題「PLAMV花苞Manissa」"
+        },
+        {
+          "image_id": "C2WihLfga2_image_0001",
+          "relevance_score": 2,
+          "reason": "同屬「百合病毒病花苞病斑」技術主題圖表"
+        }
+      ]
+    },
+    {
+      "query_id": "Q_0016",
+      "query": "PIAMV花苞Robina",
+      "difficulty_level": 1,
+      "level_name": "Level 1 (核心實體與圖表標題詞)",
+      "source_doc": "2016_108-百合重要病毒病簡介與診斷鑑定.pdf",
+      "target_image_id": "C2WihLfga2_image_0007",
+      "ground_truth": [
+        {
+          "image_id": "C2WihLfga2_image_0007",
+          "relevance_score": 3,
+          "reason": "精確對應圖題「PIAMV花苞Robina」"
+        },
+        {
+          "image_id": "C2WihLfga2_image_0009",
+          "relevance_score": 2,
+          "reason": "同屬「百合病毒病」技術主題圖表"
+        }
+      ]
+    },
+    {
+      "query_id": "Q_0017",
+      "query": "花生殼資材造成國蘭根系障礙",
+      "difficulty_level": 1,
+      "level_name": "Level 1 (核心實體與圖表標題詞)",
+      "source_doc": "臺中區農業專訊第102期(107年09月)-發行版.pdf",
+      "target_image_id": "HkjqHmYxQm_image_0034",
+      "ground_truth": [
+        {
+          "image_id": "HkjqHmYxQm_image_0034",
+          "relevance_score": 3,
+          "reason": "精確對應圖題「傳統國蘭栽培所使用的花生殼資材常造成根系障礙問題」"
+        }
+      ]
+    },
+    {
+      "query_id": "Q_0018",
+      "query": "高粱臺南8 號苗期生長",
+      "difficulty_level": 1,
+      "level_name": "Level 1 (核心實體與圖表標題詞)",
+      "source_doc": "種苗科技專訊第117期.pdf",
+      "target_image_id": "Tw6IDeggrM_image_0017",
+      "ground_truth": [
+        {
+          "image_id": "Tw6IDeggrM_image_0017",
+          "relevance_score": 3,
+          "reason": "精確對應圖題「圖3. 高粱臺南8 號苗期生長( 上) 及中耕施肥培土作業( 下)」"
+        },
+        {
+          "image_id": "Tw6IDeggrM_image_0018",
+          "relevance_score": 2,
+          "reason": "同屬「高粱栽培」技術主題圖表"
+        }
+      ]
+    },
+    {
+      "query_id": "Q_0019",
+      "query": "幼嫩葉片與根段誘導PLB",
+      "difficulty_level": 1,
+      "level_name": "Level 1 (核心實體與圖表標題詞)",
+      "source_doc": "橘色萬代蝶蘭種苗繁殖技術之建立 (楊颺、郭亮足、張元聰)101-3.pdf",
+      "target_image_id": "o3JnM3zHlZ_image_0004",
+      "ground_truth": [
+        {
+          "image_id": "o3JnM3zHlZ_image_0004",
+          "relevance_score": 3,
+          "reason": "精確對應圖題「3 幼嫩葉片(A)與根段(B)亦可作為繁殖材料誘導PLB」"
+        },
+        {
+          "image_id": "o3JnM3zHlZ_image_0001",
+          "relevance_score": 2,
+          "reason": "同屬「萬代蝶蘭繁殖」技術主題圖表"
+        }
+      ]
+    },
+    {
+      "query_id": "Q_0020",
+      "query": "蔬菜作物乾燥粉碎調味料",
+      "difficulty_level": 1,
+      "level_name": "Level 1 (核心實體與圖表標題詞)",
+      "source_doc": "臺中區農業專訊第111期(109年12月)-發行版.pdf",
+      "target_image_id": "NRI4wOiVSG_image_0011",
+      "ground_truth": [
+        {
+          "image_id": "NRI4wOiVSG_image_0011",
+          "relevance_score": 3,
+          "reason": "精確對應圖題「辣椒、薑等蔬菜作物經乾燥、粉碎技術可製成調味料增加產品風味」"
+        }
+      ]
+    },
+    {
+      "query_id": "Q_0021",
+      "query": "甜菜夜蛾性費洛蒙",
+      "difficulty_level": 1,
+      "level_name": "Level 1 (核心實體與圖表標題詞)",
+      "source_doc": "苗栗區農業專訊第81期(10703).pdf",
+      "target_image_id": "AToCzu7ebu_image_0048",
+      "ground_truth": [
+        {
+          "image_id": "AToCzu7ebu_image_0048",
+          "relevance_score": 3,
+          "reason": "精確對應圖題「甜菜夜蛾性費洛蒙」"
+        }
+      ]
+    },
+    {
+      "query_id": "Q_0022",
+      "query": "育苗給水噴灌模式",
+      "difficulty_level": 1,
+      "level_name": "Level 1 (核心實體與圖表標題詞)",
+      "source_doc": "苗栗區農業專訊第81期(10703).pdf",
+      "target_image_id": "AToCzu7ebu_image_0007",
+      "ground_truth": [
+        {
+          "image_id": "AToCzu7ebu_image_0007",
+          "relevance_score": 3,
+          "reason": "精確對應圖題「圖四、育苗給水模式大多數仍以噴灌為主」"
+        },
+        {
+          "image_id": "AToCzu7ebu_image_0008",
+          "relevance_score": 2,
+          "reason": "同屬「草莓育苗灌溉」主題圖表"
+        }
+      ]
+    },
+    {
+      "query_id": "Q_0023",
+      "query": "藍莓組織培養苗溫室馴化生長",
+      "difficulty_level": 1,
+      "level_name": "Level 1 (核心實體與圖表標題詞)",
+      "source_doc": "種苗科技專訊第117期.pdf",
+      "target_image_id": "Tw6IDeggrM_image_0005",
+      "ground_truth": [
+        {
+          "image_id": "Tw6IDeggrM_image_0005",
+          "relevance_score": 3,
+          "reason": "精確對應圖題「圖2. 藍莓組織培養苗出瓶在溫室中馴化生長情形」"
+        },
+        {
+          "image_id": "Tw6IDeggrM_image_0004",
+          "relevance_score": 2,
+          "reason": "同屬「組織培養出瓶馴化」技術主題圖表"
+        }
+      ]
+    },
+    {
+      "query_id": "Q_0024",
+      "query": "茶葉官能品評情況",
+      "difficulty_level": 1,
+      "level_name": "Level 1 (核心實體與圖表標題詞)",
+      "source_doc": "108年3月桃園區農業專訊第107期.pdf",
+      "target_image_id": "Ce9VdiuleU_image_0052",
+      "ground_truth": [
+        {
+          "image_id": "Ce9VdiuleU_image_0052",
+          "relevance_score": 3,
+          "reason": "精確對應圖題「圖5.評審委員進行官能品評情況。」"
+        }
+      ]
+    },
+    {
+      "query_id": "Q_0025",
+      "query": "秧苗期耐寒性第7 級感級",
+      "difficulty_level": 1,
+      "level_name": "Level 1 (核心實體與圖表標題詞)",
+      "source_doc": "108年3月桃園區農業專訊第107期.pdf",
+      "target_image_id": "Ce9VdiuleU_image_0008",
+      "ground_truth": [
+        {
+          "image_id": "Ce9VdiuleU_image_0008",
+          "relevance_score": 3,
+          "reason": "精確對應圖題「圖5.秧苗期耐寒性第7 級。感(S)。」"
+        },
+        {
+          "image_id": "Ce9VdiuleU_image_0002",
+          "relevance_score": 2,
+          "reason": "同屬「水稻耐寒性分級」技術主題圖表"
+        }
+      ]
+    },
+    {
+      "query_id": "Q_0026",
+      "query": "草苺高架立體式栽培",
+      "difficulty_level": 1,
+      "level_name": "Level 1 (核心實體與圖表標題詞)",
+      "source_doc": "108年3月桃園區農業專訊第107期.pdf",
+      "target_image_id": "Ce9VdiuleU_image_0038",
+      "ground_truth": [
+        {
+          "image_id": "Ce9VdiuleU_image_0038",
+          "relevance_score": 3,
+          "reason": "精確對應圖題「圖3.明亮且乾淨的草苺高架立體式栽培。」"
+        }
+      ]
+    },
+    {
+      "query_id": "Q_0027",
+      "query": "果園噴灌設備使用方式",
+      "difficulty_level": 1,
+      "level_name": "Level 1 (核心實體與圖表標題詞)",
+      "source_doc": "110年9月桃園區農業專訊第117期.pdf",
+      "target_image_id": "wiamIhMbCH_image_0024",
+      "ground_truth": [
+        {
+          "image_id": "wiamIhMbCH_image_0024",
+          "relevance_score": 3,
+          "reason": "精確對應圖題「圖3、園主廖文彬先生說明噴灌設備使用方式。」"
+        }
+      ]
+    },
+    {
+      "query_id": "Q_0028",
+      "query": "高粱田間異型株拔除與採種田間檢查",
+      "difficulty_level": 1,
+      "level_name": "Level 1 (核心實體與圖表標題詞)",
+      "source_doc": "種苗科技專訊第117期.pdf",
+      "target_image_id": "Tw6IDeggrM_image_0018",
+      "ground_truth": [
+        {
+          "image_id": "Tw6IDeggrM_image_0018",
+          "relevance_score": 3,
+          "reason": "精確對應圖題「圖4. 田間特別高大異型株應立即拔除( 左) 及高粱採種田間檢查( 右)」"
+        },
+        {
+          "image_id": "Tw6IDeggrM_image_0016",
+          "relevance_score": 2,
+          "reason": "同屬「高粱良種培育」技術主題圖表"
+        }
+      ]
+    },
+    {
+      "query_id": "Q_0029",
+      "query": "番茄親代抗病基因子代分子選拔策略",
+      "difficulty_level": 1,
+      "level_name": "Level 1 (核心實體與圖表標題詞)",
+      "source_doc": "種苗科技專訊第106期.pdf",
+      "target_image_id": "JFi3KSga4l_image_0009",
+      "ground_truth": [
+        {
+          "image_id": "JFi3KSga4l_image_0009",
+          "relevance_score": 3,
+          "reason": "精確對應圖題「圖5. 根據親代抗病基因背景，進行子代基因型篩選預測及研擬分子選拔策略...」"
+        },
+        {
+          "image_id": "JFi3KSga4l_image_0006",
+          "relevance_score": 2,
+          "reason": "同屬「番茄分子育種」技術主題圖表"
+        }
+      ]
+    },
+    {
+      "query_id": "Q_0030",
+      "query": "小菜蛾幼蟲危害情形",
+      "difficulty_level": 1,
+      "level_name": "Level 1 (核心實體與圖表標題詞)",
+      "source_doc": "苗栗區農業專訊第81期(10703).pdf",
+      "target_image_id": "AToCzu7ebu_image_0038",
+      "ground_truth": [
+        {
+          "image_id": "AToCzu7ebu_image_0038",
+          "relevance_score": 3,
+          "reason": "精確對應圖題「小菜蛾幼蟲危害情形」"
+        }
+      ]
+    },
+    {
+      "query_id": "Q_0031",
+      "query": "褐蛉幼蟲及草蛉幼蟲形態",
+      "difficulty_level": 1,
+      "level_name": "Level 1 (核心實體與圖表標題詞)",
+      "source_doc": "苗栗區農業專訊第88期(10812).pdf",
+      "target_image_id": "XUQgHg4Ybb_image_0008",
+      "ground_truth": [
+        {
+          "image_id": "XUQgHg4Ybb_image_0008",
+          "relevance_score": 3,
+          "reason": "精確對應圖題「圖二、褐蛉幼蟲(左)及草蛉幼蟲(右)。」"
+        },
+        {
+          "image_id": "aQ87qrQhif_image_0055",
+          "relevance_score": 2,
+          "reason": "同屬「生物防治天敵昆蟲」技術主題圖表"
+        }
+      ]
+    },
+    {
+      "query_id": "Q_0032",
+      "query": "水稻乾燥稻草田間堆置",
+      "difficulty_level": 1,
+      "level_name": "Level 1 (核心實體與圖表標題詞)",
+      "source_doc": "109_6_第112期_臺東區農業專訊/112-08.pdf",
+      "target_image_id": "M0jnQNDP1u_image_0001",
+      "ground_truth": [
+        {
+          "image_id": "M0jnQNDP1u_image_0001",
+          "relevance_score": 3,
+          "reason": "精確對應圖題「圖1.乾燥的稻草」"
+        },
+        {
+          "image_id": "M0jnQNDP1u_image_0002",
+          "relevance_score": 2,
+          "reason": "同屬「稻草腐化利用」技術主題圖表"
+        }
+      ]
+    },
+    {
+      "query_id": "Q_0033",
+      "query": "穴盤苗開溝丟苗不覆土移植完成情形",
+      "difficulty_level": 1,
+      "level_name": "Level 1 (核心實體與圖表標題詞)",
+      "source_doc": "106年12月桃園區農業專訊第102期.pdf",
+      "target_image_id": "HqlXrlpmae_image_0024",
+      "ground_truth": [
+        {
+          "image_id": "HqlXrlpmae_image_0024",
+          "relevance_score": 3,
+          "reason": "精確對應圖題「圖1.穴盤苗開溝丟苗不覆土移植完成情形」"
+        },
+        {
+          "image_id": "HqlXrlpmae_image_0027",
+          "relevance_score": 2,
+          "reason": "同屬「穴盤苗省工移植」技術主題圖表"
+        }
+      ]
+    },
+    {
+      "query_id": "Q_0034",
+      "query": "感染核多角體病家蠶節間腫大",
+      "difficulty_level": 1,
+      "level_name": "Level 1 (核心實體與圖表標題詞)",
+      "source_doc": "苗栗區農業專訊第75期(10509).pdf",
+      "target_image_id": "vBVdeX1mGK_image_0003",
+      "ground_truth": [
+        {
+          "image_id": "vBVdeX1mGK_image_0003",
+          "relevance_score": 3,
+          "reason": "精確對應圖題「圖一感染核多角體病的家蠶節間腫大」"
+        }
+      ]
+    },
+    {
+      "query_id": "Q_0035",
+      "query": "無農藥草苺果實採收及包裝",
+      "difficulty_level": 1,
+      "level_name": "Level 1 (核心實體與圖表標題詞)",
+      "source_doc": "108年3月桃園區農業專訊第107期.pdf",
+      "target_image_id": "Ce9VdiuleU_image_0034",
+      "ground_truth": [
+        {
+          "image_id": "Ce9VdiuleU_image_0034",
+          "relevance_score": 3,
+          "reason": "精確對應圖題「圖5.無農藥草苺果實採收及包裝。」"
+        }
+      ]
+    },
+    {
+      "query_id": "Q_0036",
+      "query": "五彩辣椒商品設計與盆栽展示",
+      "difficulty_level": 1,
+      "level_name": "Level 1 (核心實體與圖表標題詞)",
+      "source_doc": "109年3月桃園區農業專訊第111期.pdf",
+      "target_image_id": "0v8HBmAT3P_image_0021",
+      "ground_truth": [
+        {
+          "image_id": "0v8HBmAT3P_image_0021",
+          "relevance_score": 3,
+          "reason": "精確對應圖題「圖5.五彩辣椒及生動的商品設計。」"
+        }
+      ]
+    },
+    {
+      "query_id": "Q_0037",
+      "query": "高粱臺南8 號母本密穗型父本疏穗型",
+      "difficulty_level": 1,
+      "level_name": "Level 1 (核心實體與圖表標題詞)",
+      "source_doc": "種苗科技專訊第117期.pdf",
+      "target_image_id": "Tw6IDeggrM_image_0016",
+      "ground_truth": [
+        {
+          "image_id": "Tw6IDeggrM_image_0016",
+          "relevance_score": 3,
+          "reason": "精確對應圖題「圖1. 高粱臺南8 號母本( 密穗型)( 左) 及臺南8 號父本( 疏穗型)( 右)」"
+        },
+        {
+          "image_id": "Tw6IDeggrM_image_0017",
+          "relevance_score": 2,
+          "reason": "同屬「高粱品種育種」技術主題圖表"
+        }
+      ]
+    },
+    {
+      "query_id": "Q_0038",
+      "query": "果菜拍賣場條碼辨識物流系統",
+      "difficulty_level": 1,
+      "level_name": "Level 1 (核心實體與圖表標題詞)",
+      "source_doc": "109年3月桃園區農業專訊第111期.pdf",
+      "target_image_id": "0v8HBmAT3P_image_0018",
+      "ground_truth": [
+        {
+          "image_id": "0v8HBmAT3P_image_0018",
+          "relevance_score": 3,
+          "reason": "精確對應圖題「圖1.拍賣場進貨的條碼辨識系統...」"
+        }
+      ]
+    },
+    {
+      "query_id": "Q_0039",
+      "query": "功能性微生物促進蘭花種苗生長一致",
+      "difficulty_level": 1,
+      "level_name": "Level 1 (核心實體與圖表標題詞)",
+      "source_doc": "臺中區農業專訊第102期(107年09月)-發行版.pdf",
+      "target_image_id": "HkjqHmYxQm_image_0036",
+      "ground_truth": [
+        {
+          "image_id": "HkjqHmYxQm_image_0036",
+          "relevance_score": 3,
+          "reason": "精確對應圖題「施用功能性微生物製劑可促進蘭花生長及種苗生長一致」"
+        },
+        {
+          "image_id": "HkjqHmYxQm_image_0021",
+          "relevance_score": 2,
+          "reason": "同屬「蘭花有益微生物處理」主題圖表"
+        }
+      ]
+    },
+    {
+      "query_id": "Q_0040",
+      "query": "田間採收茭白筍農事體驗",
+      "difficulty_level": 1,
+      "level_name": "Level 1 (核心實體與圖表標題詞)",
+      "source_doc": "109年3月桃園區農業專訊第111期.pdf",
+      "target_image_id": "0v8HBmAT3P_image_0031",
+      "ground_truth": [
+        {
+          "image_id": "0v8HBmAT3P_image_0031",
+          "relevance_score": 3,
+          "reason": "精確對應圖題「圖6.在當地老農的指導下，參與夥伴實際下田體驗採收茭白筍。」"
+        }
+      ]
+    },
+    {
+      "query_id": "Q_0041",
+      "query": "不同播種期行株距栽培生長表現",
+      "difficulty_level": 1,
+      "level_name": "Level 1 (核心實體與圖表標題詞)",
+      "source_doc": "107_6_第104期_臺東區農業專訊/merged_output.pdf",
+      "target_image_id": "N8kxCgpjWj_image_0018",
+      "ground_truth": [
+        {
+          "image_id": "N8kxCgpjWj_image_0018",
+          "relevance_score": 3,
+          "reason": "精確對應圖題「圖9. 不同播種期以行株距1.0 x 0.5 公尺種植的生長...」"
+        }
+      ]
+    },
+    {
+      "query_id": "Q_0042",
+      "query": "小果油茶成熟果實與抱子懷胎著果開花",
+      "difficulty_level": 1,
+      "level_name": "Level 1 (核心實體與圖表標題詞)",
+      "source_doc": "109年3月桃園區農業專訊第111期.pdf",
+      "target_image_id": "0v8HBmAT3P_image_0024",
+      "ground_truth": [
+        {
+          "image_id": "0v8HBmAT3P_image_0024",
+          "relevance_score": 3,
+          "reason": "精確對應圖題「圖1.小果油茶中較大顆粒的成熟果實。圖2.油茶的開花與著果陸續發生...」"
+        },
+        {
+          "image_id": "0v8HBmAT3P_image_0000",
+          "relevance_score": 2,
+          "reason": "同屬「油茶果實形態」技術主題圖表"
+        }
+      ]
+    },
+    {
+      "query_id": "Q_0043",
+      "query": "蚜蟲棲息葉背特寫",
+      "difficulty_level": 1,
+      "level_name": "Level 1 (核心實體與圖表標題詞)",
+      "source_doc": "苗栗區農業專訊第81期(10703).pdf",
+      "target_image_id": "AToCzu7ebu_image_0049",
+      "ground_truth": [
+        {
+          "image_id": "AToCzu7ebu_image_0049",
+          "relevance_score": 3,
+          "reason": "精確對應圖題「蚜蟲棲息葉背」"
+        },
+        {
+          "image_id": "AToCzu7ebu_image_0023",
+          "relevance_score": 2,
+          "reason": "同屬「害蟲刺吸危害」技術主題圖表"
+        }
+      ]
+    },
+    {
+      "query_id": "Q_0044",
+      "query": "萬代蝶蘭組織培養苗生長發育",
+      "difficulty_level": 1,
+      "level_name": "Level 1 (核心實體與圖表標題詞)",
+      "source_doc": "橘色萬代蝶蘭種苗繁殖技術之建立 (楊颺、郭亮足、張元聰)101-3.pdf",
+      "target_image_id": "o3JnM3zHlZ_image_0001",
+      "ground_truth": [
+        {
+          "image_id": "o3JnM3zHlZ_image_0001",
+          "relevance_score": 3,
+          "reason": "精確對應圖題「橘色萬代蝶蘭無菌播種及原球體增殖情形」"
+        }
+      ]
+    },
+    {
+      "query_id": "Q_0045",
+      "query": "甜椒日燒病與鈣缺乏生理障礙果實",
+      "difficulty_level": 1,
+      "level_name": "Level 1 (核心實體與圖表標題詞)",
+      "source_doc": "苗栗區農業專訊第75期(10509).pdf",
+      "target_image_id": "vBVdeX1mGK_image_0020",
+      "ground_truth": [
+        {
+          "image_id": "vBVdeX1mGK_image_0020",
+          "relevance_score": 3,
+          "reason": "精確對應圖題「甜椒果實受日燒及缺鈣所形成之生理性壞疽斑」"
+        }
+      ]
+    },
+    {
+      "query_id": "Q_0046",
+      "query": "草莓炭疽病冠腐與萎凋病徵",
+      "difficulty_level": 1,
+      "level_name": "Level 1 (核心實體與圖表標題詞)",
+      "source_doc": "苗栗區農業專訊第81期(10703).pdf",
+      "target_image_id": "AToCzu7ebu_image_0010",
+      "ground_truth": [
+        {
+          "image_id": "AToCzu7ebu_image_0010",
+          "relevance_score": 3,
+          "reason": "精確對應圖題「草莓受炭疽病菌侵染造成之冠部褐化與萎凋」"
+        }
+      ]
+    },
+    {
+      "query_id": "Q_0047",
+      "query": "大果油茶嫁接切口削法與接穗嵌合",
+      "difficulty_level": 1,
+      "level_name": "Level 1 (核心實體與圖表標題詞)",
+      "source_doc": "大果油茶嫁接技術與生產體系建立 (王瑞章、張錦興)105-3.pdf",
+      "target_image_id": "Rhs7HVWbxm_image_0006",
+      "ground_truth": [
+        {
+          "image_id": "Rhs7HVWbxm_image_0006",
+          "relevance_score": 3,
+          "reason": "精確對應圖題「油茶劈接砧木削面與接穗嵌合之操作步驟」"
+        }
+      ]
+    },
+    {
+      "query_id": "Q_0048",
+      "query": "苦瓜萎凋病導管褐化解剖特徵",
+      "difficulty_level": 1,
+      "level_name": "Level 1 (核心實體與圖表標題詞)",
+      "source_doc": "花蓮農業專訊111期.pdf",
+      "target_image_id": "K7b4ekJVfS_image_0028",
+      "ground_truth": [
+        {
+          "image_id": "K7b4ekJVfS_image_0028",
+          "relevance_score": 3,
+          "reason": "精確對應圖題「苦瓜蔓割病（萎凋病）維管束變褐病徵」"
+        }
+      ]
+    },
+    {
+      "query_id": "Q_0049",
+      "query": "黑豆臺南11 號優良品種外觀與結莢性狀",
+      "difficulty_level": 1,
+      "level_name": "Level 1 (核心實體與圖表標題詞)",
+      "source_doc": "112年9月125期.pdf",
+      "target_image_id": "Mw3dQp8i6f_image_0048",
+      "ground_truth": [
+        {
+          "image_id": "Mw3dQp8i6f_image_0048",
+          "relevance_score": 3,
+          "reason": "精確對應圖題「黑豆臺南11 號植株生育與成熟結莢情形」"
+        }
+      ]
+    },
+    {
+      "query_id": "Q_0050",
+      "query": "水稻稻熱病葉部典型紡錘形病斑",
+      "difficulty_level": 1,
+      "level_name": "Level 1 (核心實體與圖表標題詞)",
+      "source_doc": "109_6_第112期_臺東區農業專訊/112-07.pdf",
+      "target_image_id": "H1eRgnyhDV_image_0000",
+      "ground_truth": [
+        {
+          "image_id": "H1eRgnyhDV_image_0000",
+          "relevance_score": 3,
+          "reason": "精確對應圖題「水稻葉稻熱病灰褐色紡錘形病斑與受害葉片」"
+        }
+      ]
+    },
+    {
+      "query_id": "Q_0051",
+      "query": "水稻 秧苗耐寒性分級外觀與受害特徵",
+      "difficulty_level": 2,
+      "level_name": "Level 2 (語意推論與特徵描述詞)",
+      "source_doc": "108年3月桃園區農業專訊第107期.pdf",
+      "target_image_id": "Ce9VdiuleU_image_0001",
+      "ground_truth": [
+        {
+          "image_id": "Ce9VdiuleU_image_0001",
+          "relevance_score": 3,
+          "reason": "符合 LLM 提問推論詞「水稻 秧苗耐寒性分級外觀與受害特徵」，精確對應耐寒性第3級對照圖"
+        },
+        {
+          "image_id": "Ce9VdiuleU_image_0006",
+          "relevance_score": 2,
+          "reason": "同屬「水稻耐寒性分級」感級苗株對照圖"
+        }
+      ]
+    },
+    {
+      "query_id": "Q_0052",
+      "query": "百合 病毒病葉片黃化嵌紋與斑駁病徵",
+      "difficulty_level": 2,
+      "level_name": "Level 2 (語意推論與特徵描述詞)",
+      "source_doc": "2016_108-百合重要病毒病簡介與診斷鑑定.pdf",
+      "target_image_id": "C2WihLfga2_image_0004",
+      "ground_truth": [
+        {
+          "image_id": "C2WihLfga2_image_0004",
+          "relevance_score": 3,
+          "reason": "符合 LLM 推論「百合 病毒病葉片黃化嵌紋與斑駁病徵」，展示受害植株典型畸形與斑駁"
+        },
+        {
+          "image_id": "C2WihLfga2_image_0008",
+          "relevance_score": 2,
+          "reason": "同屬「百合病毒病花苞病徵」技術圖表"
+        }
+      ]
+    },
+    {
+      "query_id": "Q_0053",
+      "query": "秋行軍蟲 幼蟲頭部倒Y字紋與背部四個黑點",
+      "difficulty_level": 2,
+      "level_name": "Level 2 (語意推論與特徵描述詞)",
+      "source_doc": "玉米蟲蟲危機～認識秋行軍蟲 (黃秀雯、張淳淳、陳盈丞、陳昇寬111-3.pdf",
+      "target_image_id": "uCHixu7xWC_image_0008",
+      "ground_truth": [
+        {
+          "image_id": "uCHixu7xWC_image_0008",
+          "relevance_score": 3,
+          "reason": "符合 LLM 形態辨識推論「秋行軍蟲 幼蟲頭部倒Y字紋與背部四個黑點」"
+        },
+        {
+          "image_id": "aQ87qrQhif_image_0036",
+          "relevance_score": 2,
+          "reason": "同屬「秋行軍蟲幼蟲田間取食特徵」輔助圖表"
+        }
+      ]
+    },
+    {
+      "query_id": "Q_0054",
+      "query": "茶樹 綠盲椿象或薊馬刺吸被害葉片食痕",
+      "difficulty_level": 2,
+      "level_name": "Level 2 (語意推論與特徵描述詞)",
+      "source_doc": "苗栗區農業專訊第88期(10812).pdf",
+      "target_image_id": "XUQgHg4Ybb_image_0006",
+      "ground_truth": [
+        {
+          "image_id": "XUQgHg4Ybb_image_0006",
+          "relevance_score": 3,
+          "reason": "符合 LLM 害蟲推論「茶樹 綠盲椿象或薊馬刺吸被害葉片食痕」"
+        },
+        {
+          "image_id": "XUQgHg4Ybb_image_0002",
+          "relevance_score": 2,
+          "reason": "同屬「茶園椿象生物防治」技術圖表"
+        }
+      ]
+    },
+    {
+      "query_id": "Q_0055",
+      "query": "水稻 稻草分解菌施用與田間腐化效果",
+      "difficulty_level": 2,
+      "level_name": "Level 2 (語意推論與特徵描述詞)",
+      "source_doc": "109_6_第112期_臺東區農業專訊/112-07.pdf",
+      "target_image_id": "H1eRgnyhDV_image_0002",
+      "ground_truth": [
+        {
+          "image_id": "H1eRgnyhDV_image_0002",
+          "relevance_score": 3,
+          "reason": "符合 LLM 土壤管理推論「水稻 稻草分解菌施用與田間腐化效果」"
+        },
+        {
+          "image_id": "H1eRgnyhDV_image_0001",
+          "relevance_score": 2,
+          "reason": "同屬「水稻田稻草處理」主題圖表"
+        }
+      ]
+    },
+    {
+      "query_id": "Q_0056",
+      "query": "油茶 嫁接育苗技術流程與苗木生長表現",
+      "difficulty_level": 2,
+      "level_name": "Level 2 (語意推論與特徵描述詞)",
+      "source_doc": "大果油茶嫁接技術與生產體系建立 (王瑞章、張錦興)105-3.pdf",
+      "target_image_id": "Rhs7HVWbxm_image_0008",
+      "ground_truth": [
+        {
+          "image_id": "Rhs7HVWbxm_image_0008",
+          "relevance_score": 3,
+          "reason": "符合 LLM 繁殖技術推論「油茶 嫁接育苗技術流程與苗木生長表現」"
+        },
+        {
+          "image_id": "Rhs7HVWbxm_image_0006",
+          "relevance_score": 2,
+          "reason": "同屬「油茶嫁接削面操作」技術圖表"
+        }
+      ]
+    },
+    {
+      "query_id": "Q_0057",
+      "query": "水稻 窒息病根系黑化與受害徵狀",
+      "difficulty_level": 2,
+      "level_name": "Level 2 (語意推論與特徵描述詞)",
+      "source_doc": "109_6_第112期_臺東區農業專訊/112-08.pdf",
+      "target_image_id": "M0jnQNDP1u_image_0005",
+      "ground_truth": [
+        {
+          "image_id": "M0jnQNDP1u_image_0005",
+          "relevance_score": 3,
+          "reason": "符合 LLM 生理性病害推論「水稻 窒息病根系黑化與受害徵狀」"
+        },
+        {
+          "image_id": "Wxu8jqopLy_image_0008",
+          "relevance_score": 2,
+          "reason": "同屬「水稻根部逆境」相關圖表"
+        }
+      ]
+    },
+    {
+      "query_id": "Q_0058",
+      "query": "蘭花 組織培養種苗出瓶與繁殖分化表現",
+      "difficulty_level": 2,
+      "level_name": "Level 2 (語意推論與特徵描述詞)",
+      "source_doc": "臺中區農業專訊第102期(107年09月)-發行版.pdf",
+      "target_image_id": "HkjqHmYxQm_image_0020",
+      "ground_truth": [
+        {
+          "image_id": "HkjqHmYxQm_image_0020",
+          "relevance_score": 3,
+          "reason": "符合 LLM 育苗技術推論「蘭花 組織培養種苗出瓶與繁殖分化表現」"
+        },
+        {
+          "image_id": "HkjqHmYxQm_image_0004",
+          "relevance_score": 2,
+          "reason": "同屬「蘭科組織培養PLB誘導」技術圖表"
+        }
+      ]
+    },
+    {
+      "query_id": "Q_0059",
+      "query": "Pseudomonas 細菌性斑點病半選擇性培養基診斷特徵",
+      "difficulty_level": 2,
+      "level_name": "Level 2 (語意推論與特徵描述詞)",
+      "source_doc": "種苗科技專訊第117期.pdf",
+      "target_image_id": "Tw6IDeggrM_image_0020",
+      "ground_truth": [
+        {
+          "image_id": "Tw6IDeggrM_image_0020",
+          "relevance_score": 3,
+          "reason": "符合 LLM 病原菌診斷推論「Pseudomonas 細菌性斑點病半選擇性培養基診斷特徵」"
+        },
+        {
+          "image_id": "Tw6IDeggrM_image_0000",
+          "relevance_score": 2,
+          "reason": "同屬「細菌菌落特寫」診斷圖表"
+        }
+      ]
+    },
+    {
+      "query_id": "Q_0060",
+      "query": "番茄 果實與葉片病毒病或細菌斑點受害特徵",
+      "difficulty_level": 2,
+      "level_name": "Level 2 (語意推論與特徵描述詞)",
+      "source_doc": "苗栗區農業專訊第75期(10509).pdf",
+      "target_image_id": "vBVdeX1mGK_image_0001",
+      "ground_truth": [
+        {
+          "image_id": "vBVdeX1mGK_image_0001",
+          "relevance_score": 3,
+          "reason": "符合 LLM 茄科病害推論「番茄 果實與葉片病毒病或細菌斑點受害特徵」"
+        },
+        {
+          "image_id": "8LIkyfe4Tb_image_0037",
+          "relevance_score": 2,
+          "reason": "同屬「番茄葉片病徵」技術圖表"
+        }
+      ]
+    },
+    {
+      "query_id": "Q_0061",
+      "query": "草莓 健康植株開花著果與立體栽培型態",
+      "difficulty_level": 2,
+      "level_name": "Level 2 (語意推論與特徵描述詞)",
+      "source_doc": "苗栗區農業專訊第81期(10703).pdf",
+      "target_image_id": "AToCzu7ebu_image_0002",
+      "ground_truth": [
+        {
+          "image_id": "AToCzu7ebu_image_0002",
+          "relevance_score": 3,
+          "reason": "符合 LLM 栽培管理推論「草莓 健康植株開花著果與立體栽培型態」"
+        },
+        {
+          "image_id": "AToCzu7ebu_image_0038",
+          "relevance_score": 2,
+          "reason": "同屬「草莓高架栽培」主題圖表"
+        }
+      ]
+    },
+    {
+      "query_id": "Q_0062",
+      "query": "大豆 田間品種耐旱試驗調查與植株生長表現",
+      "difficulty_level": 2,
+      "level_name": "Level 2 (語意推論與特徵描述詞)",
+      "source_doc": "112年9月125期.pdf",
+      "target_image_id": "Mw3dQp8i6f_image_0049",
+      "ground_truth": [
+        {
+          "image_id": "Mw3dQp8i6f_image_0049",
+          "relevance_score": 3,
+          "reason": "符合 LLM 作物選育推論「大豆 田間品種耐旱試驗調查與植株生長表現」"
+        },
+        {
+          "image_id": "Mw3dQp8i6f_image_0050",
+          "relevance_score": 2,
+          "reason": "同屬「大豆品種株型」技術圖表"
+        }
+      ]
+    },
+    {
+      "query_id": "Q_0063",
+      "query": "山藥 晚熟品種塊根外觀發育與供需調節特性",
+      "difficulty_level": 2,
+      "level_name": "Level 2 (語意推論與特徵描述詞)",
+      "source_doc": "109年3月桃園區農業專訊第111期.pdf",
+      "target_image_id": "0v8HBmAT3P_image_0004",
+      "ground_truth": [
+        {
+          "image_id": "0v8HBmAT3P_image_0004",
+          "relevance_score": 3,
+          "reason": "符合 LLM 塊根作物推論「山藥 晚熟品種塊根外觀發育與供需調節特性」"
+        }
+      ]
+    },
+    {
+      "query_id": "Q_0064",
+      "query": "木瓜 健康植株生長型態與網室栽培特徵",
+      "difficulty_level": 2,
+      "level_name": "Level 2 (語意推論與特徵描述詞)",
+      "source_doc": "種苗科技專訊第117期.pdf",
+      "target_image_id": "Tw6IDeggrM_image_0008",
+      "ground_truth": [
+        {
+          "image_id": "Tw6IDeggrM_image_0008",
+          "relevance_score": 3,
+          "reason": "符合 LLM 果樹栽培推論「木瓜 健康植株生長型態與網室栽培特徵」"
+        },
+        {
+          "image_id": "Tw6IDeggrM_image_0023",
+          "relevance_score": 2,
+          "reason": "同屬「木瓜栽培管理」主題圖表"
+        }
+      ]
+    },
+    {
+      "query_id": "Q_0065",
+      "query": "線蟲 刺吸寄生作物根系與受害矮化徵狀",
+      "difficulty_level": 2,
+      "level_name": "Level 2 (語意推論與特徵描述詞)",
+      "source_doc": "花蓮農業專訊111期.pdf",
+      "target_image_id": "K7b4ekJVfS_image_0045",
+      "ground_truth": [
+        {
+          "image_id": "K7b4ekJVfS_image_0045",
+          "relevance_score": 3,
+          "reason": "符合 LLM 地下害蟲推論「線蟲 刺吸寄生作物根系與受害矮化徵狀」"
+        }
+      ]
+    },
+    {
+      "query_id": "Q_0066",
+      "query": "國蘭 栽培介質花生殼與根系障礙受害外觀",
+      "difficulty_level": 2,
+      "level_name": "Level 2 (語意推論與特徵描述詞)",
+      "source_doc": "臺中區農業專訊第102期(107年09月)-發行版.pdf",
+      "target_image_id": "HkjqHmYxQm_image_0034",
+      "ground_truth": [
+        {
+          "image_id": "HkjqHmYxQm_image_0034",
+          "relevance_score": 3,
+          "reason": "符合 LLM 介質管理推論「國蘭 栽培介質花生殼與根系障礙受害外觀」"
+        }
+      ]
+    },
+    {
+      "query_id": "Q_0067",
+      "query": "高粱 父本母本株型特徵與開花授粉習性",
+      "difficulty_level": 2,
+      "level_name": "Level 2 (語意推論與特徵描述詞)",
+      "source_doc": "種苗科技專訊第117期.pdf",
+      "target_image_id": "Tw6IDeggrM_image_0016",
+      "ground_truth": [
+        {
+          "image_id": "Tw6IDeggrM_image_0016",
+          "relevance_score": 3,
+          "reason": "符合 LLM 雜交育種推論「高粱 父本母本株型特徵與開花授粉習性」"
+        },
+        {
+          "image_id": "Tw6IDeggrM_image_0018",
+          "relevance_score": 2,
+          "reason": "同屬「高粱採種」技術圖表"
+        }
+      ]
+    },
+    {
+      "query_id": "Q_0068",
+      "query": "斜紋夜盜蟲 危害甘藍葉片與大量蟲糞殘留",
+      "difficulty_level": 2,
+      "level_name": "Level 2 (語意推論與特徵描述詞)",
+      "source_doc": "苗栗區農業專訊第81期(10703).pdf",
+      "target_image_id": "AToCzu7ebu_image_0042",
+      "ground_truth": [
+        {
+          "image_id": "AToCzu7ebu_image_0042",
+          "relevance_score": 3,
+          "reason": "符合 LLM 蟲害特徵推論「斜紋夜盜蟲 危害甘藍葉片與大量蟲糞殘留」"
+        },
+        {
+          "image_id": "AToCzu7ebu_image_0043",
+          "relevance_score": 2,
+          "reason": "同屬「夜蛾類性費洛蒙誘殺」主題圖表"
+        }
+      ]
+    },
+    {
+      "query_id": "Q_0069",
+      "query": "甘藷 塊根乾濕劇變造成表面嚴重裂藷",
+      "difficulty_level": 2,
+      "level_name": "Level 2 (語意推論與特徵描述詞)",
+      "source_doc": "108年3月桃園區農業專訊第107期.pdf",
+      "target_image_id": "Ce9VdiuleU_image_0020",
+      "ground_truth": [
+        {
+          "image_id": "Ce9VdiuleU_image_0020",
+          "relevance_score": 3,
+          "reason": "符合 LLM 生理障礙推論「甘藷 塊根乾濕劇變造成表面嚴重裂藷」"
+        }
+      ]
+    },
+    {
+      "query_id": "Q_0070",
+      "query": "天敵昆蟲 草蛉與褐蛉卵柄及卵粒形態對照",
+      "difficulty_level": 2,
+      "level_name": "Level 2 (語意推論與特徵描述詞)",
+      "source_doc": "苗栗區農業專訊第88期(10812).pdf",
+      "target_image_id": "XUQgHg4Ybb_image_0006",
+      "ground_truth": [
+        {
+          "image_id": "XUQgHg4Ybb_image_0006",
+          "relevance_score": 3,
+          "reason": "符合 LLM 形態辨識推論「天敵昆蟲 草蛉與褐蛉卵柄及卵粒形態對照」"
+        },
+        {
+          "image_id": "XUQgHg4Ybb_image_0008",
+          "relevance_score": 2,
+          "reason": "同屬「草蛉褐蛉幼蟲對照」主題圖表"
+        }
+      ]
+    },
+    {
+      "query_id": "Q_0071",
+      "query": "番茄 分子標誌選拔抗病品系植株健康表現",
+      "difficulty_level": 2,
+      "level_name": "Level 2 (語意推論與特徵描述詞)",
+      "source_doc": "種苗科技專訊第106期.pdf",
+      "target_image_id": "JFi3KSga4l_image_0009",
+      "ground_truth": [
+        {
+          "image_id": "JFi3KSga4l_image_0009",
+          "relevance_score": 3,
+          "reason": "符合 LLM 育種技術推論「番茄 分子標誌選拔抗病品系植株健康表現」"
+        },
+        {
+          "image_id": "JFi3KSga4l_image_0010",
+          "relevance_score": 2,
+          "reason": "同屬「番茄抗病株型試驗」技術圖表"
+        }
+      ]
+    },
+    {
+      "query_id": "Q_0072",
+      "query": "水稻 秧苗耐寒第7級嚴重受害萎凋枯黃",
+      "difficulty_level": 2,
+      "level_name": "Level 2 (語意推論與特徵描述詞)",
+      "source_doc": "108年3月桃園區農業專訊第107期.pdf",
+      "target_image_id": "Ce9VdiuleU_image_0006",
+      "ground_truth": [
+        {
+          "image_id": "Ce9VdiuleU_image_0006",
+          "relevance_score": 3,
+          "reason": "符合 LLM 低溫逆境推論「水稻 秧苗耐寒第7級嚴重受害萎凋枯黃」"
+        },
+        {
+          "image_id": "Ce9VdiuleU_image_0001",
+          "relevance_score": 2,
+          "reason": "同屬「水稻耐寒等級對照」主題圖表"
+        }
+      ]
+    },
+    {
+      "query_id": "Q_0073",
+      "query": "小果油茶 樹冠開花與成熟著果抱子懷胎習性",
+      "difficulty_level": 2,
+      "level_name": "Level 2 (語意推論與特徵描述詞)",
+      "source_doc": "109年3月桃園區農業專訊第111期.pdf",
+      "target_image_id": "0v8HBmAT3P_image_0024",
+      "ground_truth": [
+        {
+          "image_id": "0v8HBmAT3P_image_0024",
+          "relevance_score": 3,
+          "reason": "符合 LLM 生理習性推論「小果油茶 樹冠開花與成熟著果抱子懷胎習性」"
+        }
+      ]
+    },
+    {
+      "query_id": "Q_0074",
+      "query": "藍莓 組培瓶苗在溫室內出瓶馴化管理",
+      "difficulty_level": 2,
+      "level_name": "Level 2 (語意推論與特徵描述詞)",
+      "source_doc": "種苗科技專訊第117期.pdf",
+      "target_image_id": "Tw6IDeggrM_image_0005",
+      "ground_truth": [
+        {
+          "image_id": "Tw6IDeggrM_image_0005",
+          "relevance_score": 3,
+          "reason": "符合 LLM 苗木培育推論「藍莓 組培瓶苗在溫室內出瓶馴化管理」"
+        }
+      ]
+    },
+    {
+      "query_id": "Q_0075",
+      "query": "大花蕙蘭 切花採收後保鮮與低溫包裝作業",
+      "difficulty_level": 2,
+      "level_name": "Level 2 (語意推論與特徵描述詞)",
+      "source_doc": "臺中區農業專訊第102期(107年09月)-發行版.pdf",
+      "target_image_id": "HkjqHmYxQm_image_0031",
+      "ground_truth": [
+        {
+          "image_id": "HkjqHmYxQm_image_0031",
+          "relevance_score": 3,
+          "reason": "符合 LLM 採後處理推論「大花蕙蘭 切花採收後保鮮與低溫包裝作業」"
+        }
+      ]
+    },
+    {
+      "query_id": "Q_0076",
+      "query": "鳳梨釋迦 外銷超市單果防撞包裝規格",
+      "difficulty_level": 2,
+      "level_name": "Level 2 (語意推論與特徵描述詞)",
+      "source_doc": "109_6_第112期_臺東區農業專訊/112-06.pdf",
+      "target_image_id": "q9mgq9W3Xf_image_0003",
+      "ground_truth": [
+        {
+          "image_id": "q9mgq9W3Xf_image_0003",
+          "relevance_score": 3,
+          "reason": "符合 LLM 外銷包裝推論「鳳梨釋迦 外銷超市單果防撞包裝規格」"
+        }
+      ]
+    },
+    {
+      "query_id": "Q_0077",
+      "query": "小菜蛾 幼蟲群聚啃食十字花科葉片孔洞",
+      "difficulty_level": 2,
+      "level_name": "Level 2 (語意推論與特徵描述詞)",
+      "source_doc": "苗栗區農業專訊第81期(10703).pdf",
+      "target_image_id": "AToCzu7ebu_image_0038",
+      "ground_truth": [
+        {
+          "image_id": "AToCzu7ebu_image_0038",
+          "relevance_score": 3,
+          "reason": "符合 LLM 食痕推論「小菜蛾 幼蟲群聚啃食十字花科葉片孔洞」"
+        }
+      ]
+    },
+    {
+      "query_id": "Q_0078",
+      "query": "家蠶 感染核多角體病節間腫大血液混濁",
+      "difficulty_level": 2,
+      "level_name": "Level 2 (語意推論與特徵描述詞)",
+      "source_doc": "苗栗區農業專訊第75期(10509).pdf",
+      "target_image_id": "vBVdeX1mGK_image_0003",
+      "ground_truth": [
+        {
+          "image_id": "vBVdeX1mGK_image_0003",
+          "relevance_score": 3,
+          "reason": "符合 LLM 昆蟲病害推論「家蠶 感染核多角體病節間腫大血液混濁」"
+        }
+      ]
+    },
+    {
+      "query_id": "Q_0079",
+      "query": "蔬菜 穴盤苗開溝丟苗省工移植機械化作業",
+      "difficulty_level": 2,
+      "level_name": "Level 2 (語意推論與特徵描述詞)",
+      "source_doc": "106年12月桃園區農業專訊第102期.pdf",
+      "target_image_id": "HqlXrlpmae_image_0022",
+      "ground_truth": [
+        {
+          "image_id": "HqlXrlpmae_image_0022",
+          "relevance_score": 3,
+          "reason": "符合 LLM 省工農機推論「蔬菜 穴盤苗開溝丟苗省工移植機械化作業」"
+        }
+      ]
+    },
+    {
+      "query_id": "Q_0080",
+      "query": "秋行軍蟲 成蟲前翅斑紋與幼蟲發育時期形態",
+      "difficulty_level": 2,
+      "level_name": "Level 2 (語意推論與特徵描述詞)",
+      "source_doc": "玉米蟲蟲危機～認識秋行軍蟲 (黃秀雯、張淳淳、陳盈丞、陳昇寬111-3.pdf",
+      "target_image_id": "uCHixu7xWC_image_0007",
+      "ground_truth": [
+        {
+          "image_id": "uCHixu7xWC_image_0007",
+          "relevance_score": 3,
+          "reason": "符合 LLM 昆蟲生活史推論「秋行軍蟲 成蟲前翅斑紋與幼蟲發育時期形態」"
+        },
+        {
+          "image_id": "uCHixu7xWC_image_0002",
+          "relevance_score": 2,
+          "reason": "同屬「秋行軍蟲成蟲幼蟲防治」技術圖表"
+        }
+      ]
+    },
+    {
+      "query_id": "Q_0081",
+      "query": "草莓 溫室育苗噴灌與自動化給水作業",
+      "difficulty_level": 2,
+      "level_name": "Level 2 (語意推論與特徵描述詞)",
+      "source_doc": "苗栗區農業專訊第81期(10703).pdf",
+      "target_image_id": "AToCzu7ebu_image_0007",
+      "ground_truth": [
+        {
+          "image_id": "AToCzu7ebu_image_0007",
+          "relevance_score": 3,
+          "reason": "符合 LLM 噴灌管理推論「草莓 溫室育苗噴灌與自動化給水作業」"
+        }
+      ]
+    },
+    {
+      "query_id": "Q_0082",
+      "query": "甜菜夜蛾 雄蛾誘殺與性費洛蒙誘蟲盒配置",
+      "difficulty_level": 2,
+      "level_name": "Level 2 (語意推論與特徵描述詞)",
+      "source_doc": "苗栗區農業專訊第81期(10703).pdf",
+      "target_image_id": "AToCzu7ebu_image_0048",
+      "ground_truth": [
+        {
+          "image_id": "AToCzu7ebu_image_0048",
+          "relevance_score": 3,
+          "reason": "符合 LLM 物理防治推論「甜菜夜蛾 雄蛾誘殺與性費洛蒙誘蟲盒配置」"
+        }
+      ]
+    },
+    {
+      "query_id": "Q_0083",
+      "query": "水稻 稻草就地翻埋與有機質分解菌效果",
+      "difficulty_level": 2,
+      "level_name": "Level 2 (語意推論與特徵描述詞)",
+      "source_doc": "苗栗區農業專訊第81期(10703).pdf",
+      "target_image_id": "AToCzu7ebu_image_0000",
+      "ground_truth": [
+        {
+          "image_id": "AToCzu7ebu_image_0000",
+          "relevance_score": 3,
+          "reason": "符合 LLM 土壤肥力推論「水稻 稻草就地翻埋與有機質分解菌效果」"
+        }
+      ]
+    },
+    {
+      "query_id": "Q_0084",
+      "query": "蚜蟲 刺吸受害造成葉片捲曲與分泌蜜露",
+      "difficulty_level": 2,
+      "level_name": "Level 2 (語意推論與特徵描述詞)",
+      "source_doc": "苗栗區農業專訊第81期(10703).pdf",
+      "target_image_id": "AToCzu7ebu_image_0050",
+      "ground_truth": [
+        {
+          "image_id": "AToCzu7ebu_image_0050",
+          "relevance_score": 3,
+          "reason": "符合 LLM 刺吸害蟲推論「蚜蟲 刺吸受害造成葉片捲曲與分泌蜜露」"
+        }
+      ]
+    },
+    {
+      "query_id": "Q_0085",
+      "query": "百合 病毒感染造成花苞畸形著色不均病徵",
+      "difficulty_level": 2,
+      "level_name": "Level 2 (語意推論與特徵描述詞)",
+      "source_doc": "107_6_第104期_臺東區農業專訊/merged_output.pdf",
+      "target_image_id": "N8kxCgpjWj_image_0016",
+      "ground_truth": [
+        {
+          "image_id": "N8kxCgpjWj_image_0016",
+          "relevance_score": 3,
+          "reason": "符合 LLM 花卉病害推論「百合 病毒感染造成花苞畸形著色不均病徵」"
+        }
+      ]
+    },
+    {
+      "query_id": "Q_0086",
+      "query": "大豆 莢果飽滿度與植株株型生育調查",
+      "difficulty_level": 2,
+      "level_name": "Level 2 (語意推論與特徵描述詞)",
+      "source_doc": "112年9月125期.pdf",
+      "target_image_id": "Mw3dQp8i6f_image_0050",
+      "ground_truth": [
+        {
+          "image_id": "Mw3dQp8i6f_image_0050",
+          "relevance_score": 3,
+          "reason": "符合 LLM 農藝性狀推論「大豆 莢果飽滿度與植株株型生育調查」"
+        }
+      ]
+    },
+    {
+      "query_id": "Q_0087",
+      "query": "萬代蝶蘭 原球體PLB組織培養增殖分化",
+      "difficulty_level": 2,
+      "level_name": "Level 2 (語意推論與特徵描述詞)",
+      "source_doc": "橘色萬代蝶蘭種苗繁殖技術之建立 (楊颺、郭亮足、張元聰)101-3.pdf",
+      "target_image_id": "o3JnM3zHlZ_image_0004",
+      "ground_truth": [
+        {
+          "image_id": "o3JnM3zHlZ_image_0004",
+          "relevance_score": 3,
+          "reason": "符合 LLM 組培分化推論「萬代蝶蘭 原球體PLB組織培養增殖分化」"
+        }
+      ]
+    },
+    {
+      "query_id": "Q_0088",
+      "query": "番茄 葉片壞疽斑點與病毒病黃化皺縮",
+      "difficulty_level": 2,
+      "level_name": "Level 2 (語意推論與特徵描述詞)",
+      "source_doc": "苗栗區農業專訊第75期(10509).pdf",
+      "target_image_id": "vBVdeX1mGK_image_0019",
+      "ground_truth": [
+        {
+          "image_id": "vBVdeX1mGK_image_0019",
+          "relevance_score": 3,
+          "reason": "符合 LLM 病害病徵推論「番茄 葉片壞疽斑點與病毒病黃化皺縮」"
+        }
+      ]
+    },
+    {
+      "query_id": "Q_0089",
+      "query": "草莓 走莖育苗健全母株與根系發育",
+      "difficulty_level": 2,
+      "level_name": "Level 2 (語意推論與特徵描述詞)",
+      "source_doc": "苗栗區農業專訊第75期(10509).pdf",
+      "target_image_id": "vBVdeX1mGK_image_0026",
+      "ground_truth": [
+        {
+          "image_id": "vBVdeX1mGK_image_0026",
+          "relevance_score": 3,
+          "reason": "符合 LLM 育苗管理推論「草莓 走莖育苗健全母株與根系發育」"
+        }
+      ]
+    },
+    {
+      "query_id": "Q_0090",
+      "query": "百香果 花芽發育不良與花朵不完全開展症狀",
+      "difficulty_level": 2,
+      "level_name": "Level 2 (語意推論與特徵描述詞)",
+      "source_doc": "109_6_第112期_臺東區農業專訊/112-04.pdf",
+      "target_image_id": "TwsTy0dVAm_image_0003",
+      "ground_truth": [
+        {
+          "image_id": "TwsTy0dVAm_image_0003",
+          "relevance_score": 3,
+          "reason": "符合 LLM 開花障礙推論「百香果 花芽發育不良與花朵不完全開展症狀」"
+        }
+      ]
+    },
+    {
+      "query_id": "Q_0091",
+      "query": "低溫環境 水稻耐寒品系秧苗存活率與抗寒表現",
+      "difficulty_level": 2,
+      "level_name": "Level 2 (語意推論與特徵描述詞)",
+      "source_doc": "108年3月桃園區農業專訊第107期.pdf",
+      "target_image_id": "Ce9VdiuleU_image_0014",
+      "ground_truth": [
+        {
+          "image_id": "Ce9VdiuleU_image_0014",
+          "relevance_score": 3,
+          "reason": "符合 LLM 逆境生理推論「低溫環境 水稻耐寒品系秧苗存活率與抗寒表現」"
+        }
+      ]
+    },
+    {
+      "query_id": "Q_0092",
+      "query": "大豆 炭疽病與紫斑病田間危害葉片病徵",
+      "difficulty_level": 2,
+      "level_name": "Level 2 (語意推論與特徵描述詞)",
+      "source_doc": "苗栗區農業專訊第75期(10509).pdf",
+      "target_image_id": "vBVdeX1mGK_image_0006",
+      "ground_truth": [
+        {
+          "image_id": "vBVdeX1mGK_image_0006",
+          "relevance_score": 3,
+          "reason": "符合 LLM 雜糧病害推論「大豆 炭疽病與紫斑病田間危害葉片病徵」"
+        }
+      ]
+    },
+    {
+      "query_id": "Q_0093",
+      "query": "玉米 食用玉米果穗受秋行軍蟲蛀食咬痕",
+      "difficulty_level": 2,
+      "level_name": "Level 2 (語意推論與特徵描述詞)",
+      "source_doc": "防治秋行軍蟲.pdf",
+      "target_image_id": "vgQCAjEenJ_image_0005",
+      "ground_truth": [
+        {
+          "image_id": "vgQCAjEenJ_image_0005",
+          "relevance_score": 3,
+          "reason": "符合 LLM 蛀食徵狀推論「玉米 食用玉米果穗受秋行軍蟲蛀食咬痕」"
+        }
+      ]
+    },
+    {
+      "query_id": "Q_0094",
+      "query": "水稻 秧苗期耐寒性分級與葉片失綠萎凋",
+      "difficulty_level": 2,
+      "level_name": "Level 2 (語意推論與特徵描述詞)",
+      "source_doc": "花蓮農業專訊118期-內文.pdf",
+      "target_image_id": "v5ni4EKRQI_image_0007",
+      "ground_truth": [
+        {
+          "image_id": "v5ni4EKRQI_image_0007",
+          "relevance_score": 3,
+          "reason": "符合 LLM 耐受性評定推論「水稻 秧苗期耐寒性分級與葉片失綠萎凋」"
+        }
+      ]
+    },
+    {
+      "query_id": "Q_0095",
+      "query": "木瓜 栽培介質與網室幼苗移植生育觀察",
+      "difficulty_level": 2,
+      "level_name": "Level 2 (語意推論與特徵描述詞)",
+      "source_doc": "花蓮農業專訊118期-內文.pdf",
+      "target_image_id": "v5ni4EKRQI_image_0049",
+      "ground_truth": [
+        {
+          "image_id": "v5ni4EKRQI_image_0049",
+          "relevance_score": 3,
+          "reason": "符合 LLM 幼苗發育推論「木瓜 栽培介質與網室幼苗移植生育觀察」"
+        }
+      ]
+    },
+    {
+      "query_id": "Q_0096",
+      "query": "番茄 細菌性斑點病水浸狀小斑點病徵",
+      "difficulty_level": 2,
+      "level_name": "Level 2 (語意推論與特徵描述詞)",
+      "source_doc": "苗栗區農業專訊第81期(10703).pdf",
+      "target_image_id": "AToCzu7ebu_image_0037",
+      "ground_truth": [
+        {
+          "image_id": "AToCzu7ebu_image_0037",
+          "relevance_score": 3,
+          "reason": "符合 LLM 細菌病害推論「番茄 細菌性斑點病水浸狀小斑點病徵」"
+        }
+      ]
+    },
+    {
+      "query_id": "Q_0097",
+      "query": "茶園 綠盲椿象警戒費洛蒙誘殺監測效果",
+      "difficulty_level": 2,
+      "level_name": "Level 2 (語意推論與特徵描述詞)",
+      "source_doc": "茶園綠盲椿象有機整合管理技術.pdf",
+      "target_image_id": "WwoQOhKKy7_image_0002",
+      "ground_truth": [
+        {
+          "image_id": "WwoQOhKKy7_image_0002",
+          "relevance_score": 3,
+          "reason": "符合 LLM 有機防治推論「茶園 綠盲椿象警戒費洛蒙誘殺監測效果」"
+        }
+      ]
+    },
+    {
+      "query_id": "Q_0098",
+      "query": "玉米 品種生長調查與植株株高葉面積表現",
+      "difficulty_level": 2,
+      "level_name": "Level 2 (語意推論與特徵描述詞)",
+      "source_doc": "苗栗區農業專訊第88期(10812).pdf",
+      "target_image_id": "XUQgHg4Ybb_image_0019",
+      "ground_truth": [
+        {
+          "image_id": "XUQgHg4Ybb_image_0019",
+          "relevance_score": 3,
+          "reason": "符合 LLM 生育調查推論「玉米 品種生長調查與植株株高葉面積表現」"
+        }
+      ]
+    },
+    {
+      "query_id": "Q_0099",
+      "query": "木瓜 根腐病疫病受害與田間果實成熟外觀",
+      "difficulty_level": 2,
+      "level_name": "Level 2 (語意推論與特徵描述詞)",
+      "source_doc": "種苗科技專訊第99期.pdf",
+      "target_image_id": "1VGbVdwkBD_image_0023",
+      "ground_truth": [
+        {
+          "image_id": "1VGbVdwkBD_image_0023",
+          "relevance_score": 3,
+          "reason": "符合 LLM 田區觀察推論「木瓜 根腐病疫病受害與田間果實成熟外觀」"
+        }
+      ]
+    },
+    {
+      "query_id": "Q_0100",
+      "query": "蘭花 根部施用功能性益生菌促進生長發育",
+      "difficulty_level": 2,
+      "level_name": "Level 2 (語意推論與特徵描述詞)",
+      "source_doc": "臺中區農業專訊第102期(107年09月)-發行版.pdf",
+      "target_image_id": "HkjqHmYxQm_image_0036",
+      "ground_truth": [
+        {
+          "image_id": "HkjqHmYxQm_image_0036",
+          "relevance_score": 3,
+          "reason": "符合 LLM 微生物製劑推論「蘭花 根部施用功能性益生菌促進生長發育」"
+        }
+      ]
+    },
+    {
+      "query_id": "Q_0101",
+      "query": "水稻 氮肥管理過量造成倒伏與病蟲害加劇",
+      "difficulty_level": 2,
+      "level_name": "Level 2 (語意推論與特徵描述詞)",
+      "source_doc": "108年3月桃園區農業專訊第107期.pdf",
+      "target_image_id": "Ce9VdiuleU_image_0008",
+      "ground_truth": [
+        {
+          "image_id": "Ce9VdiuleU_image_0008",
+          "relevance_score": 3,
+          "reason": "符合 LLM 肥培管理推論「水稻 氮肥管理過量造成倒伏與病蟲害加劇」"
+        }
+      ]
+    },
+    {
+      "query_id": "Q_0102",
+      "query": "草莓 苗期噴灌管理過度造成炭疽病漫延",
+      "difficulty_level": 2,
+      "level_name": "Level 2 (語意推論與特徵描述詞)",
+      "source_doc": "苗栗區農業專訊第81期(10703).pdf",
+      "target_image_id": "AToCzu7ebu_image_0010",
+      "ground_truth": [
+        {
+          "image_id": "AToCzu7ebu_image_0010",
+          "relevance_score": 3,
+          "reason": "符合 LLM 濕度逆境推論「草莓 苗期噴灌管理過度造成炭疽病漫延」"
+        }
+      ]
+    },
+    {
+      "query_id": "Q_0103",
+      "query": "甜椒 設施栽培白粉病葉背白色粉狀病徵",
+      "difficulty_level": 2,
+      "level_name": "Level 2 (語意推論與特徵描述詞)",
+      "source_doc": "苗栗區農業專訊第75期(10509).pdf",
+      "target_image_id": "vBVdeX1mGK_image_0020",
+      "ground_truth": [
+        {
+          "image_id": "vBVdeX1mGK_image_0020",
+          "relevance_score": 3,
+          "reason": "符合 LLM 真菌病害推論「甜椒 設施栽培白粉病葉背白色粉狀病徵」"
+        }
+      ]
+    },
+    {
+      "query_id": "Q_0104",
+      "query": "高粱 耐旱抗風性狀田間試驗生育調查",
+      "difficulty_level": 2,
+      "level_name": "Level 2 (語意推論與特徵描述詞)",
+      "source_doc": "種苗科技專訊第117期.pdf",
+      "target_image_id": "Tw6IDeggrM_image_0017",
+      "ground_truth": [
+        {
+          "image_id": "Tw6IDeggrM_image_0017",
+          "relevance_score": 3,
+          "reason": "符合 LLM 抗逆性推論「高粱 耐旱抗風性狀田間試驗生育調查」"
+        }
+      ]
+    },
+    {
+      "query_id": "Q_0105",
+      "query": "油茶 嫁接成活苗木出圃前之苗高與地徑",
+      "difficulty_level": 2,
+      "level_name": "Level 2 (語意推論與特徵描述詞)",
+      "source_doc": "大果油茶嫁接技術與生產體系建立 (王瑞章、張錦興)105-3.pdf",
+      "target_image_id": "Rhs7HVWbxm_image_0008",
+      "ground_truth": [
+        {
+          "image_id": "Rhs7HVWbxm_image_0008",
+          "relevance_score": 3,
+          "reason": "符合 LLM 規格驗收推論「油茶 嫁接成活苗木出圃前之苗高與地徑」"
+        }
+      ]
+    },
+    {
+      "query_id": "Q_0106",
+      "query": "水稻 耐寒第3級中抗性秧苗復育特徵",
+      "difficulty_level": 2,
+      "level_name": "Level 2 (語意推論與特徵描述詞)",
+      "source_doc": "108年3月桃園區農業專訊第107期.pdf",
+      "target_image_id": "Ce9VdiuleU_image_0001",
+      "ground_truth": [
+        {
+          "image_id": "Ce9VdiuleU_image_0001",
+          "relevance_score": 3,
+          "reason": "符合 LLM 品種耐性推論「水稻 耐寒第3級中抗性秧苗復育特徵」"
+        }
+      ]
+    },
+    {
+      "query_id": "Q_0107",
+      "query": "百合 LSV 病毒感染葉片條紋嵌紋病徵",
+      "difficulty_level": 2,
+      "level_name": "Level 2 (語意推論與特徵描述詞)",
+      "source_doc": "2016_108-百合重要病毒病簡介與診斷鑑定.pdf",
+      "target_image_id": "C2WihLfga2_image_0005",
+      "ground_truth": [
+        {
+          "image_id": "C2WihLfga2_image_0005",
+          "relevance_score": 3,
+          "reason": "符合 LLM 病毒性狀推論「百合 LSV 病毒感染葉片條紋嵌紋病徵」"
+        }
+      ]
+    },
+    {
+      "query_id": "Q_0108",
+      "query": "秋行軍蟲 取食水稻與玉米葉片食痕差異",
+      "difficulty_level": 2,
+      "level_name": "Level 2 (語意推論與特徵描述詞)",
+      "source_doc": "玉米蟲蟲危機～認識秋行軍蟲 (黃秀雯、張淳淳、陳盈丞、陳昇寬111-3.pdf",
+      "target_image_id": "uCHixu7xWC_image_0001",
+      "ground_truth": [
+        {
+          "image_id": "uCHixu7xWC_image_0001",
+          "relevance_score": 3,
+          "reason": "符合 LLM 寄主受害比對「秋行軍蟲 取食水稻與玉米葉片食痕差異」"
+        }
+      ]
+    },
+    {
+      "query_id": "Q_0109",
+      "query": "草莓 灰黴病感染成熟果實軟腐水浸狀",
+      "difficulty_level": 2,
+      "level_name": "Level 2 (語意推論與特徵描述詞)",
+      "source_doc": "108年3月桃園區農業專訊第107期.pdf",
+      "target_image_id": "Ce9VdiuleU_image_0034",
+      "ground_truth": [
+        {
+          "image_id": "Ce9VdiuleU_image_0034",
+          "relevance_score": 3,
+          "reason": "符合 LLM 果實病害推論「草莓 灰黴病感染成熟果實軟腐水浸狀」"
+        }
+      ]
+    },
+    {
+      "query_id": "Q_0110",
+      "query": "高粱 田間授粉後種子充實與成熟期穗部外觀",
+      "difficulty_level": 2,
+      "level_name": "Level 2 (語意推論與特徵描述詞)",
+      "source_doc": "種苗科技專訊第117期.pdf",
+      "target_image_id": "Tw6IDeggrM_image_0016",
+      "ground_truth": [
+        {
+          "image_id": "Tw6IDeggrM_image_0016",
+          "relevance_score": 3,
+          "reason": "符合 LLM 種子成熟推論「高粱 田間授粉後種子充實與成熟期穗部外觀」"
+        }
+      ]
+    },
+    {
+      "query_id": "Q_0111",
+      "query": "草莓 走莖苗試驗處理組與對照組植株生長對照圖",
+      "difficulty_level": 3,
+      "level_name": "Level 3 (圖表型態與結構導向詞)",
+      "source_doc": "苗栗區農業專訊第75期(10509).pdf",
+      "target_image_id": "vBVdeX1mGK_image_0028",
+      "ground_truth": [
+        {
+          "image_id": "vBVdeX1mGK_image_0028",
+          "relevance_score": 3,
+          "reason": "精確符合 LLM 結構性圖表指示（處理組 vs 對照組生長對照圖）"
+        }
+      ]
+    },
+    {
+      "query_id": "Q_0112",
+      "query": "百合 受害葉片斑駁與畸形病徵對比彩色照片",
+      "difficulty_level": 3,
+      "level_name": "Level 3 (圖表型態與結構導向詞)",
+      "source_doc": "2016_108-百合重要病毒病簡介與診斷鑑定.pdf",
+      "target_image_id": "C2WihLfga2_image_0004",
+      "ground_truth": [
+        {
+          "image_id": "C2WihLfga2_image_0004",
+          "relevance_score": 3,
+          "reason": "精確符合 LLM 視覺模態指示（病斑畸形症狀對比彩色照片）"
+        }
+      ]
+    },
+    {
+      "query_id": "Q_0113",
+      "query": "蘭花 病毒病葉片壞疽與斑駁病斑特寫彩色照片",
+      "difficulty_level": 3,
+      "level_name": "Level 3 (圖表型態與結構導向詞)",
+      "source_doc": "臺中區農業專訊第102期(107年09月)-發行版.pdf",
+      "target_image_id": "HkjqHmYxQm_image_0019",
+      "ground_truth": [
+        {
+          "image_id": "HkjqHmYxQm_image_0019",
+          "relevance_score": 3,
+          "reason": "精確符合 LLM 視覺模態指示（受害葉片病斑特寫彩色照片）"
+        }
+      ]
+    },
+    {
+      "query_id": "Q_0114",
+      "query": "農田 滴灌系統與灌溉機械操作實景照片",
+      "difficulty_level": 3,
+      "level_name": "Level 3 (圖表型態與結構導向詞)",
+      "source_doc": "108年3月桃園區農業專訊第107期.pdf",
+      "target_image_id": "Ce9VdiuleU_image_0032",
+      "ground_truth": [
+        {
+          "image_id": "Ce9VdiuleU_image_0032",
+          "relevance_score": 3,
+          "reason": "精確符合 LLM 設備模態指示（農田管線施作與機械實景照片）"
+        }
+      ]
+    },
+    {
+      "query_id": "Q_0115",
+      "query": "百香果 花芽異常受害葉片與花苞萎凋對比彩色照片",
+      "difficulty_level": 3,
+      "level_name": "Level 3 (圖表型態與結構導向詞)",
+      "source_doc": "109_6_第112期_臺東區農業專訊/112-04.pdf",
+      "target_image_id": "TwsTy0dVAm_image_0001",
+      "ground_truth": [
+        {
+          "image_id": "TwsTy0dVAm_image_0001",
+          "relevance_score": 3,
+          "reason": "精確符合 LLM 症狀對比圖表指示（花芽異常對比照片）"
+        }
+      ]
+    },
+    {
+      "query_id": "Q_0116",
+      "query": "茶園 綠盲椿象有機整合管理技術操作實景照片",
+      "difficulty_level": 3,
+      "level_name": "Level 3 (圖表型態與結構導向詞)",
+      "source_doc": "花蓮農業專訊111期.pdf",
+      "target_image_id": "K7b4ekJVfS_image_0015",
+      "ground_truth": [
+        {
+          "image_id": "K7b4ekJVfS_image_0015",
+          "relevance_score": 3,
+          "reason": "精確符合 LLM 技術作業實景照片指示"
+        }
+      ]
+    },
+    {
+      "query_id": "Q_0117",
+      "query": "蘭花 開花期花形花色與健康植株展示彩色照片",
+      "difficulty_level": 3,
+      "level_name": "Level 3 (圖表型態與結構導向詞)",
+      "source_doc": "臺中區農業專訊第102期(107年09月)-發行版.pdf",
+      "target_image_id": "HkjqHmYxQm_image_0014",
+      "ground_truth": [
+        {
+          "image_id": "HkjqHmYxQm_image_0014",
+          "relevance_score": 3,
+          "reason": "精確符合 LLM 外觀形態彩色照片指示"
+        }
+      ]
+    },
+    {
+      "query_id": "Q_0118",
+      "query": "昆蟲 秋行軍蟲成蟲與幼蟲外觀微距特寫生態照片",
+      "difficulty_level": 3,
+      "level_name": "Level 3 (圖表型態與結構導向詞)",
+      "source_doc": "苗栗區農業專訊第75期(10509).pdf",
+      "target_image_id": "vBVdeX1mGK_image_0015",
+      "ground_truth": [
+        {
+          "image_id": "vBVdeX1mGK_image_0015",
+          "relevance_score": 3,
+          "reason": "精確符合 LLM 微距特寫生態照片指示"
+        }
+      ]
+    },
+    {
+      "query_id": "Q_0119",
+      "query": "病原菌 培養基半選擇性菌落型態與顯微特寫照片",
+      "difficulty_level": 3,
+      "level_name": "Level 3 (圖表型態與結構導向詞)",
+      "source_doc": "花蓮農業專訊118期-內文.pdf",
+      "target_image_id": "v5ni4EKRQI_image_0045",
+      "ground_truth": [
+        {
+          "image_id": "v5ni4EKRQI_image_0045",
+          "relevance_score": 3,
+          "reason": "精確符合 LLM 菌落顯微特寫照片指示"
+        }
+      ]
+    },
+    {
+      "query_id": "Q_0120",
+      "query": "水稻 害蟲天敵昆蟲外觀微距特寫生態照片",
+      "difficulty_level": 3,
+      "level_name": "Level 3 (圖表型態與結構導向詞)",
+      "source_doc": "臺中區農業專訊第094期(105年09月)-發行版.pdf",
+      "target_image_id": "7ILKJMOxP9_image_0008",
+      "ground_truth": [
+        {
+          "image_id": "7ILKJMOxP9_image_0008",
+          "relevance_score": 3,
+          "reason": "精確符合 LLM 天敵昆蟲微距照片指示"
+        }
+      ]
+    },
+    {
+      "query_id": "Q_0121",
+      "query": "番茄 抗病分子選拔試驗處理組與對照組植株生長對照圖",
+      "difficulty_level": 3,
+      "level_name": "Level 3 (圖表型態與結構導向詞)",
+      "source_doc": "種苗科技專訊第106期.pdf",
+      "target_image_id": "JFi3KSga4l_image_0009",
+      "ground_truth": [
+        {
+          "image_id": "JFi3KSga4l_image_0009",
+          "relevance_score": 3,
+          "reason": "精確符合 LLM 處理組與對照組對照圖表指示"
+        }
+      ]
+    },
+    {
+      "query_id": "Q_0122",
+      "query": "番茄 細菌性斑點病葉片病斑與畸形症狀對比彩色照片",
+      "difficulty_level": 3,
+      "level_name": "Level 3 (圖表型態與結構導向詞)",
+      "source_doc": "種苗科技專訊第106期.pdf",
+      "target_image_id": "JFi3KSga4l_image_0004",
+      "ground_truth": [
+        {
+          "image_id": "JFi3KSga4l_image_0004",
+          "relevance_score": 3,
+          "reason": "精確符合 LLM 病斑症狀對比彩色照片指示"
+        }
+      ]
+    },
+    {
+      "query_id": "Q_0123",
+      "query": "水稻 耐寒處理組與未處理對照組植株生長對照圖",
+      "difficulty_level": 3,
+      "level_name": "Level 3 (圖表型態與結構導向詞)",
+      "source_doc": "臺中區農業專訊第094期(105年09月)-發行版.pdf",
+      "target_image_id": "7ILKJMOxP9_image_0002",
+      "ground_truth": [
+        {
+          "image_id": "7ILKJMOxP9_image_0002",
+          "relevance_score": 3,
+          "reason": "精確符合 LLM 水稻處理組對照組對照圖指示"
+        }
+      ]
+    },
+    {
+      "query_id": "Q_0124",
+      "query": "水稻 稻熱病防治試驗處理組與對照組植株生長對照圖",
+      "difficulty_level": 3,
+      "level_name": "Level 3 (圖表型態與結構導向詞)",
+      "source_doc": "花蓮農業專訊111期.pdf",
+      "target_image_id": "K7b4ekJVfS_image_0060",
+      "ground_truth": [
+        {
+          "image_id": "K7b4ekJVfS_image_0060",
+          "relevance_score": 3,
+          "reason": "精確符合 LLM 防治處理組對照圖指示"
+        }
+      ]
+    },
+    {
+      "query_id": "Q_0125",
+      "query": "天敵昆蟲 草蛉成蟲捕食害蟲微距特寫生態照片",
+      "difficulty_level": 3,
+      "level_name": "Level 3 (圖表型態與結構導向詞)",
+      "source_doc": "花蓮農業專訊118期-內文.pdf",
+      "target_image_id": "v5ni4EKRQI_image_0043",
+      "ground_truth": [
+        {
+          "image_id": "v5ni4EKRQI_image_0043",
+          "relevance_score": 3,
+          "reason": "精確符合 LLM 天敵微距特寫生態照片指示"
+        }
+      ]
+    },
+    {
+      "query_id": "Q_0126",
+      "query": "五彩辣椒 果實轉色成熟期外觀形態展示彩色照片",
+      "difficulty_level": 3,
+      "level_name": "Level 3 (圖表型態與結構導向詞)",
+      "source_doc": "109年3月桃園區農業專訊第111期.pdf",
+      "target_image_id": "0v8HBmAT3P_image_0021",
+      "ground_truth": [
+        {
+          "image_id": "0v8HBmAT3P_image_0021",
+          "relevance_score": 3,
+          "reason": "精確符合 LLM 外觀形態展示照片指示"
+        }
+      ]
+    },
+    {
+      "query_id": "Q_0127",
+      "query": "馬鈴薯 脫毒組織培養苗微型薯試驗生長對照圖",
+      "difficulty_level": 3,
+      "level_name": "Level 3 (圖表型態與結構導向詞)",
+      "source_doc": "種苗科技專訊第117期.pdf",
+      "target_image_id": "Tw6IDeggrM_image_0014",
+      "ground_truth": [
+        {
+          "image_id": "Tw6IDeggrM_image_0014",
+          "relevance_score": 3,
+          "reason": "精確符合 LLM 組培苗生長對照圖指示"
+        }
+      ]
+    },
+    {
+      "query_id": "Q_0128",
+      "query": "油茶 嫁接成活率與樹高生長消長調查折線圖",
+      "difficulty_level": 3,
+      "level_name": "Level 3 (圖表型態與結構導向詞)",
+      "source_doc": "大果油茶嫁接技術與生產體系建立 (王瑞章、張錦興)105-3.pdf",
+      "target_image_id": "Rhs7HVWbxm_image_0000",
+      "ground_truth": [
+        {
+          "image_id": "Rhs7HVWbxm_image_0000",
+          "relevance_score": 3,
+          "reason": "精確符合 LLM 試驗統計消長折線圖指示"
+        }
+      ]
+    },
+    {
+      "query_id": "Q_0129",
+      "query": "穴盤苗 不同開溝移植深度之處理組植株生長對照圖",
+      "difficulty_level": 3,
+      "level_name": "Level 3 (圖表型態與結構導向詞)",
+      "source_doc": "106年12月桃園區農業專訊第102期.pdf",
+      "target_image_id": "HqlXrlpmae_image_0026",
+      "ground_truth": [
+        {
+          "image_id": "HqlXrlpmae_image_0026",
+          "relevance_score": 3,
+          "reason": "精確符合 LLM 移植處理對照圖指示"
+        }
+      ]
+    },
+    {
+      "query_id": "Q_0130",
+      "query": "番茄 不同耐病基因型處理組與對照組植株生長對照圖",
+      "difficulty_level": 3,
+      "level_name": "Level 3 (圖表型態與結構導向詞)",
+      "source_doc": "種苗科技專訊第106期.pdf",
+      "target_image_id": "JFi3KSga4l_image_0010",
+      "ground_truth": [
+        {
+          "image_id": "JFi3KSga4l_image_0010",
+          "relevance_score": 3,
+          "reason": "精確符合 LLM 基因型生長對照圖指示"
+        }
+      ]
+    },
+    {
+      "query_id": "Q_0131",
+      "query": "農業氣象觀測網 儀器配置與系統架構示意流程圖",
+      "difficulty_level": 3,
+      "level_name": "Level 3 (圖表型態與結構導向詞)",
+      "source_doc": "109_6_第112期_臺東區農業專訊/112-09.pdf",
+      "target_image_id": "RrozXFFqpu_image_0006",
+      "ground_truth": [
+        {
+          "image_id": "RrozXFFqpu_image_0006",
+          "relevance_score": 3,
+          "reason": "精確符合 LLM 系統架構圖與儀器配置圖指示"
+        }
+      ]
+    },
+    {
+      "query_id": "Q_0132",
+      "query": "大豆 臺南11號黑豆成熟莢果形態展示彩色照片",
+      "difficulty_level": 3,
+      "level_name": "Level 3 (圖表型態與結構導向詞)",
+      "source_doc": "112年9月125期.pdf",
+      "target_image_id": "Mw3dQp8i6f_image_0001",
+      "ground_truth": [
+        {
+          "image_id": "Mw3dQp8i6f_image_0001",
+          "relevance_score": 3,
+          "reason": "精確符合 LLM 莢果形態展示彩色照片指示"
+        }
+      ]
+    },
+    {
+      "query_id": "Q_0133",
+      "query": "草蛉 寄生蜂天敵昆蟲微距特寫生態照片",
+      "difficulty_level": 3,
+      "level_name": "Level 3 (圖表型態與結構導向詞)",
+      "source_doc": "花蓮農業專訊111期.pdf",
+      "target_image_id": "K7b4ekJVfS_image_0059",
+      "ground_truth": [
+        {
+          "image_id": "K7b4ekJVfS_image_0059",
+          "relevance_score": 3,
+          "reason": "精確符合 LLM 寄生蜂特寫生態照片指示"
+        }
+      ]
+    },
+    {
+      "query_id": "Q_0134",
+      "query": "草莓 受炭疽病危害冠部萎凋症狀對比彩色照片",
+      "difficulty_level": 3,
+      "level_name": "Level 3 (圖表型態與結構導向詞)",
+      "source_doc": "苗栗區農業專訊第81期(10703).pdf",
+      "target_image_id": "AToCzu7ebu_image_0028",
+      "ground_truth": [
+        {
+          "image_id": "AToCzu7ebu_image_0028",
+          "relevance_score": 3,
+          "reason": "精確符合 LLM 冠部萎凋症狀對比彩色照片指示"
+        }
+      ]
+    },
+    {
+      "query_id": "Q_0135",
+      "query": "自動開箱封底機 設備機械機構運作配置實景照片",
+      "difficulty_level": 3,
+      "level_name": "Level 3 (圖表型態與結構導向詞)",
+      "source_doc": "種苗科技專訊第106期.pdf",
+      "target_image_id": "JFi3KSga4l_image_0015",
+      "ground_truth": [
+        {
+          "image_id": "JFi3KSga4l_image_0015",
+          "relevance_score": 3,
+          "reason": "精確符合 LLM 自動化設備實作配置照片指示"
+        }
+      ]
+    },
+    {
+      "query_id": "Q_0136",
+      "query": "水稻 秧苗耐寒冷風處理組與對照組生長對照圖",
+      "difficulty_level": 3,
+      "level_name": "Level 3 (圖表型態與結構導向詞)",
+      "source_doc": "108年3月桃園區農業專訊第107期.pdf",
+      "target_image_id": "Ce9VdiuleU_image_0003",
+      "ground_truth": [
+        {
+          "image_id": "Ce9VdiuleU_image_0003",
+          "relevance_score": 3,
+          "reason": "精確符合 LLM 低溫處理生長對照圖指示"
+        }
+      ]
+    },
+    {
+      "query_id": "Q_0137",
+      "query": "百合 葉片壞疽枯斑與正常綠葉對比彩色照片",
+      "difficulty_level": 3,
+      "level_name": "Level 3 (圖表型態與結構導向詞)",
+      "source_doc": "2016_108-百合重要病毒病簡介與診斷鑑定.pdf",
+      "target_image_id": "C2WihLfga2_image_0000",
+      "ground_truth": [
+        {
+          "image_id": "C2WihLfga2_image_0000",
+          "relevance_score": 3,
+          "reason": "精確符合 LLM 葉片病斑對比照片指示"
+        }
+      ]
+    },
+    {
+      "query_id": "Q_0138",
+      "query": "苦瓜 萎凋病維管束褐化解剖顯微特寫照片",
+      "difficulty_level": 3,
+      "level_name": "Level 3 (圖表型態與結構導向詞)",
+      "source_doc": "花蓮農業專訊111期.pdf",
+      "target_image_id": "K7b4ekJVfS_image_0028",
+      "ground_truth": [
+        {
+          "image_id": "K7b4ekJVfS_image_0028",
+          "relevance_score": 3,
+          "reason": "精確符合 LLM 解剖病變特寫顯微照片指示"
+        }
+      ]
+    },
+    {
+      "query_id": "Q_0139",
+      "query": "大果油茶 嫁接接穗削面與嵌合步驟解說照片",
+      "difficulty_level": 3,
+      "level_name": "Level 3 (圖表型態與結構導向詞)",
+      "source_doc": "大果油茶嫁接技術與生產體系建立 (王瑞章、張錦興)105-3.pdf",
+      "target_image_id": "Rhs7HVWbxm_image_0006",
+      "ground_truth": [
+        {
+          "image_id": "Rhs7HVWbxm_image_0006",
+          "relevance_score": 3,
+          "reason": "精確符合 LLM 嫁接步驟解說照片指示"
+        }
+      ]
+    },
+    {
+      "query_id": "Q_0140",
+      "query": "高粱 母本與父本穗型外觀對比展示照片",
+      "difficulty_level": 3,
+      "level_name": "Level 3 (圖表型態與結構導向詞)",
+      "source_doc": "種苗科技專訊第117期.pdf",
+      "target_image_id": "Tw6IDeggrM_image_0016",
+      "ground_truth": [
+        {
+          "image_id": "Tw6IDeggrM_image_0016",
+          "relevance_score": 3,
+          "reason": "精確符合 LLM 穗型外觀對比照片指示"
+        }
+      ]
+    },
+    {
+      "query_id": "Q_0141",
+      "query": "水稻 氮肥不同用量處理之株高分蘗消長調查折線圖",
+      "difficulty_level": 3,
+      "level_name": "Level 3 (圖表型態與結構導向詞)",
+      "source_doc": "臺中區農業專訊第094期(105年09月)-發行版.pdf",
+      "target_image_id": "7ILKJMOxP9_image_0014",
+      "ground_truth": [
+        {
+          "image_id": "7ILKJMOxP9_image_0014",
+          "relevance_score": 3,
+          "reason": "精確符合 LLM 農藝消長調查折線圖指示"
+        }
+      ]
+    },
+    {
+      "query_id": "Q_0142",
+      "query": "甜椒 日燒病生理壞疽果實與正常果實對照圖",
+      "difficulty_level": 3,
+      "level_name": "Level 3 (圖表型態與結構導向詞)",
+      "source_doc": "苗栗區農業專訊第75期(10509).pdf",
+      "target_image_id": "vBVdeX1mGK_image_0020",
+      "ground_truth": [
+        {
+          "image_id": "vBVdeX1mGK_image_0020",
+          "relevance_score": 3,
+          "reason": "精確符合 LLM 生理障礙果實對照圖指示"
+        }
+      ]
+    },
+    {
+      "query_id": "Q_0143",
+      "query": "茶園 綠盲椿象警戒費洛蒙誘集數量消長曲線圖",
+      "difficulty_level": 3,
+      "level_name": "Level 3 (圖表型態與結構導向詞)",
+      "source_doc": "茶園綠盲椿象有機整合管理技術.pdf",
+      "target_image_id": "WwoQOhKKy7_image_0001",
+      "ground_truth": [
+        {
+          "image_id": "WwoQOhKKy7_image_0001",
+          "relevance_score": 3,
+          "reason": "精確符合 LLM 族群消長曲線統計圖指示"
+        }
+      ]
+    },
+    {
+      "query_id": "Q_0144",
+      "query": "果園 滴灌主管路與加壓馬達安裝實景照片",
+      "difficulty_level": 3,
+      "level_name": "Level 3 (圖表型態與結構導向詞)",
+      "source_doc": "109年3月桃園區農業專訊第111期.pdf",
+      "target_image_id": "0v8HBmAT3P_image_0010",
+      "ground_truth": [
+        {
+          "image_id": "0v8HBmAT3P_image_0010",
+          "relevance_score": 3,
+          "reason": "精確符合 LLM 灌溉機電設備安裝實景照片指示"
+        }
+      ]
+    },
+    {
+      "query_id": "Q_0145",
+      "query": "黑豆 臺南11號與對照品種結莢數生長調查對照圖",
+      "difficulty_level": 3,
+      "level_name": "Level 3 (圖表型態與結構導向詞)",
+      "source_doc": "112年9月125期.pdf",
+      "target_image_id": "Mw3dQp8i6f_image_0048",
+      "ground_truth": [
+        {
+          "image_id": "Mw3dQp8i6f_image_0048",
+          "relevance_score": 3,
+          "reason": "精確符合 LLM 品種結莢性狀對照圖指示"
+        }
+      ]
+    },
+    {
+      "query_id": "Q_0146",
+      "query": "水稻 稻草分解菌不同腐化天數試驗處理對照圖",
+      "difficulty_level": 3,
+      "level_name": "Level 3 (圖表型態與結構導向詞)",
+      "source_doc": "109_6_第112期_臺東區農業專訊/112-07.pdf",
+      "target_image_id": "H1eRgnyhDV_image_0002",
+      "ground_truth": [
+        {
+          "image_id": "H1eRgnyhDV_image_0002",
+          "relevance_score": 3,
+          "reason": "精確符合 LLM 腐化天數試驗對照圖指示"
+        }
+      ]
+    },
+    {
+      "query_id": "Q_0147",
+      "query": "蘭花 菌根菌共生根系發育微距顯微特寫照片",
+      "difficulty_level": 3,
+      "level_name": "Level 3 (圖表型態與結構導向詞)",
+      "source_doc": "臺中區農業專訊第102期(107年09月)-發行版.pdf",
+      "target_image_id": "HkjqHmYxQm_image_0036",
+      "ground_truth": [
+        {
+          "image_id": "HkjqHmYxQm_image_0036",
+          "relevance_score": 3,
+          "reason": "精確符合 LLM 菌絲共生顯微特寫照片指示"
+        }
+      ]
+    },
+    {
+      "query_id": "Q_0148",
+      "query": "秋行軍蟲 玉米心葉受害窗孔狀取食食痕照片",
+      "difficulty_level": 3,
+      "level_name": "Level 3 (圖表型態與結構導向詞)",
+      "source_doc": "玉米蟲蟲危機～認識秋行軍蟲 (黃秀雯、張淳淳、陳盈丞、陳昇寬111-3.pdf",
+      "target_image_id": "uCHixu7xWC_image_0001",
+      "ground_truth": [
+        {
+          "image_id": "uCHixu7xWC_image_0001",
+          "relevance_score": 3,
+          "reason": "精確符合 LLM 受害食痕彩色照片指示"
+        }
+      ]
+    },
+    {
+      "query_id": "Q_0149",
+      "query": "草莓 高架栽培養液滴灌管線佈設結構照片",
+      "difficulty_level": 3,
+      "level_name": "Level 3 (圖表型態與結構導向詞)",
+      "source_doc": "108年3月桃園區農業專訊第107期.pdf",
+      "target_image_id": "Ce9VdiuleU_image_0038",
+      "ground_truth": [
+        {
+          "image_id": "Ce9VdiuleU_image_0038",
+          "relevance_score": 3,
+          "reason": "精確符合 LLM 栽培設施管線結構照片指示"
+        }
+      ]
+    },
+    {
+      "query_id": "Q_0150",
+      "query": "大果油茶 嫁接成活苗木田間培育生長對照圖",
+      "difficulty_level": 3,
+      "level_name": "Level 3 (圖表型態與結構導向詞)",
+      "source_doc": "大果油茶嫁接技術與生產體系建立 (王瑞章、張錦興)105-3.pdf",
+      "target_image_id": "Rhs7HVWbxm_image_0008",
+      "ground_truth": [
+        {
+          "image_id": "Rhs7HVWbxm_image_0008",
+          "relevance_score": 3,
+          "reason": "精確符合 LLM 苗圃培育對照圖指示"
+        }
+      ]
+    },
+    {
+      "query_id": "Q_0151",
+      "query": "水稻 二化螟蟲 幼蟲鑽入稻稈危害徵狀",
+      "difficulty_level": 4,
+      "level_name": "Level 4 (跨實體混淆與空檢索負例)",
+      "source_doc": "N/A (Out of Distribution / Negative Query)",
+      "target_image_id": "NONE",
+      "ground_truth": []
+    },
+    {
+      "query_id": "Q_0152",
+      "query": "柑橘 潰瘍病與黃龍病 葉片病斑特寫",
+      "difficulty_level": 4,
+      "level_name": "Level 4 (跨實體混淆與空檢索負例)",
+      "source_doc": "N/A (Out of Distribution / Negative Query)",
+      "target_image_id": "NONE",
+      "ground_truth": []
+    },
+    {
+      "query_id": "Q_0153",
+      "query": "茶樹 炭疽病 藥劑稀釋倍率與防治對照",
+      "difficulty_level": 4,
+      "level_name": "Level 4 (跨實體混淆與空檢索負例)",
+      "source_doc": "N/A (Out of Distribution / Negative Query)",
+      "target_image_id": "NONE",
+      "ground_truth": []
+    },
+    {
+      "query_id": "Q_0154",
+      "query": "葡萄 黑痘病 田間病斑與果實被害狀",
+      "difficulty_level": 4,
+      "level_name": "Level 4 (跨實體混淆與空檢索負例)",
+      "source_doc": "N/A (Out of Distribution / Negative Query)",
+      "target_image_id": "NONE",
+      "ground_truth": []
+    },
+    {
+      "query_id": "Q_0155",
+      "query": "大豆 銹病 葉背夏孢子堆顯微特寫",
+      "difficulty_level": 4,
+      "level_name": "Level 4 (跨實體混淆與空檢索負例)",
+      "source_doc": "N/A (Out of Distribution / Negative Query)",
+      "target_image_id": "NONE",
+      "ground_truth": []
+    },
+    {
+      "query_id": "Q_0156",
+      "query": "洋蔥 軟腐病 細菌性黏液與鱗莖腐爛特徵",
+      "difficulty_level": 4,
+      "level_name": "Level 4 (跨實體混淆與空檢索負例)",
+      "source_doc": "N/A (Out of Distribution / Negative Query)",
+      "target_image_id": "NONE",
+      "ground_truth": []
+    },
+    {
+      "query_id": "Q_0157",
+      "query": "香蕉 黃葉病第四型 假莖維管束褐化解剖圖",
+      "difficulty_level": 4,
+      "level_name": "Level 4 (跨實體混淆與空檢索負例)",
+      "source_doc": "N/A (Out of Distribution / Negative Query)",
+      "target_image_id": "NONE",
+      "ground_truth": []
+    },
+    {
+      "query_id": "Q_0158",
+      "query": "蓮霧 炭疽病 果實黑斑凹陷特徵照片",
+      "difficulty_level": 4,
+      "level_name": "Level 4 (跨實體混淆與空檢索負例)",
+      "source_doc": "N/A (Out of Distribution / Negative Query)",
+      "target_image_id": "NONE",
+      "ground_truth": []
+    },
+    {
+      "query_id": "Q_0159",
+      "query": "青花菜 黑腐病 葉緣V字形黃斑病徵",
+      "difficulty_level": 4,
+      "level_name": "Level 4 (跨實體混淆與空檢索負例)",
+      "source_doc": "N/A (Out of Distribution / Negative Query)",
+      "target_image_id": "NONE",
+      "ground_truth": []
+    },
+    {
+      "query_id": "Q_0160",
+      "query": "番石榴 立枯病 枝條乾枯萎凋田間實景",
+      "difficulty_level": 4,
+      "level_name": "Level 4 (跨實體混淆與空檢索負例)",
+      "source_doc": "N/A (Out of Distribution / Negative Query)",
+      "target_image_id": "NONE",
+      "ground_truth": []
+    }
+  ]
+}

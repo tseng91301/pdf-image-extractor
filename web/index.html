@@ -55,13 +55,13 @@
           </svg>
           API Docs (Swagger)
         </button>
-        <button class="nav-btn secondary" id="diagnosticsToggleBtn" onclick="toggleDiagnostics()">
+        <button class="nav-btn secondary dev-btn" id="diagnosticsToggleBtn" onclick="toggleDiagnostics()">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <circle cx="12" cy="12" r="3" />
-            <path
-              d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
+            <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
+            <line x1="8" y1="21" x2="16" y2="21"/>
+            <line x1="12" y1="17" x2="12" y2="21"/>
           </svg>
-          獨立功能診斷台
+          🛠️ 開發者控制台 (Dev Console & Benchmark)
         </button>
       </div>
     </header>
@@ -148,55 +148,281 @@
         </details>
       </section>
 
-      <!-- Diagnostics Panel (Hidden by default) -->
-      <section class="diagnostics-panel" id="diagnosticsSection" style="display:none;">
+      <!-- Developer Console & Diagnostics Panel (Hidden by default) -->
+      <section class="diagnostics-panel dev-console" id="diagnosticsSection" style="display:none;">
         <div class="panel-header">
           <div class="panel-title-group">
-            <h3>🔬 獨立模組功能測試台 (Module Isolation & Diagnostics)</h3>
-            <p>可在此個別排查斷詞器、BM25 全文打分、向量語意相似度與 Cross-Encoder 重排序</p>
+            <h3>🛠️ 開發者控制台 (Developer Console & Benchmark Studio)</h3>
+            <p>包含端到端檢索 Benchmark 評測、消融對比分析、歷史結果調閱、逐筆題目圖文檢索明細與獨立單元模組診斷</p>
           </div>
           <button class="close-panel-btn" onclick="toggleDiagnostics()">✕</button>
         </div>
-        <div class="diagnostics-tabs">
-          <button class="tab-btn active" onclick="switchDiagTab('tokenizeTab')">1. Jieba 斷詞分析</button>
-          <button class="tab-btn" onclick="switchDiagTab('bm25Tab')">2. BM25 獨立檢索</button>
-          <button class="tab-btn" onclick="switchDiagTab('denseTab')">3. 向量語意獨立檢索</button>
-          <button class="tab-btn" onclick="switchDiagTab('rerankTab')">4. Cross-Encoder 交叉注意力測試</button>
+
+        <!-- Top-level Mode Switcher -->
+        <div class="dev-mode-switcher">
+          <button class="mode-btn active" id="btnModeBenchmark" onclick="switchDevMode('benchmark')">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M18 20V10"/>
+              <path d="M12 20V4"/>
+              <path d="M6 20v-6"/>
+            </svg>
+            <span>📊 Benchmark 評測與歷史報告中心</span>
+          </button>
+          <button class="mode-btn" id="btnModeIsolation" onclick="switchDevMode('isolation')">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
+            </svg>
+            <span>🔬 獨立模組單元測試台 (Unit Diagnostics)</span>
+          </button>
         </div>
 
-        <div class="tab-body" id="tokenizeTab">
-          <div class="diag-form-row">
-            <input type="text" id="diagTokInput" class="diag-input" placeholder="輸入欲測試斷詞的句子..."
-              value="山藥桃園4號地下塊莖特點與栽培效益">
-            <button class="btn-action" onclick="runDiagTokenize()">執行斷詞分析</button>
+        <!-- Mode 1: Benchmark Studio -->
+        <div class="dev-mode-content" id="devBenchmarkView">
+          <!-- Benchmark Execution Controls -->
+          <div class="benchmark-control-card">
+            <div class="bm-control-header">
+              <h4>🚀 評測任務配置與執行</h4>
+              <span class="bm-hint">可選擇不同測試集，評測系統檢索與排序能力並自動生成歷史報告</span>
+            </div>
+            <div class="bm-control-form">
+              <div class="bm-form-field flex-2">
+                <label for="benchmarkDatasetSelect">選擇評測資料集 (Dataset):</label>
+                <select id="benchmarkDatasetSelect" class="dev-select">
+                  <option value="">正在載入資料集清單...</option>
+                </select>
+              </div>
+              <div class="bm-form-field flex-2">
+                <label for="benchmarkReportNameInput">自訂儲存報告名稱 (選填):</label>
+                <input type="text" id="benchmarkReportNameInput" class="dev-input" placeholder="例如: report_test_v3 (留空自動加時間戳)">
+              </div>
+              <div class="bm-form-actions">
+                <button class="btn-action primary" id="runBenchmarkBtn" onclick="triggerBenchmarkRun()">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                  啟動 Benchmark 評測
+                </button>
+                <button class="btn-action danger" id="cancelBenchmarkBtn" onclick="cancelBenchmarkRun()" style="display:none;">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="6" width="12" height="12"/></svg>
+                  中斷評測
+                </button>
+                <button class="btn-action secondary" onclick="loadBenchmarkDatasetsAndReports()" title="重新整理資料集與歷史報告清單">
+                  🔄 重新整理
+                </button>
+              </div>
+            </div>
+
+            <!-- Dynamic Benchmark Progress Tracker -->
+            <div class="bm-progress-card" id="benchmarkProgressBox" style="display:none;">
+              <div class="bm-progress-header">
+                <div class="bm-progress-title">
+                  <span class="pulse-dot active"></span>
+                  <span id="bmProgressArmText">正在執行評測: BM25_Only</span>
+                </div>
+                <div class="bm-progress-meta">
+                  <span id="bmProgressCountText">0 / 160 題 (0%)</span>
+                  <span id="bmProgressElapsedText">耗時: 0.0s</span>
+                </div>
+              </div>
+              <div class="bm-progress-bar-wrap">
+                <div class="bm-progress-bar" id="bmProgressBar" style="width: 0%;"></div>
+              </div>
+            </div>
           </div>
-          <div class="diag-output" id="diagTokOutput">點擊執行查看斷詞結果...</div>
+
+          <!-- Report Selector & Metadata Header -->
+          <div class="report-meta-card">
+            <div class="report-selector-row">
+              <div class="report-select-group">
+                <label for="benchmarkReportSelect">📂 切換調閱歷史報告 (Select Report):</label>
+                <select id="benchmarkReportSelect" class="dev-select" onchange="loadSelectedReport()">
+                  <option value="">載入歷史報告中...</option>
+                </select>
+              </div>
+              <div class="report-actions-group">
+                <button class="btn-action outline" onclick="toggleRawJson()">
+                  {} 檢視原始 JSON 數據
+                </button>
+              </div>
+            </div>
+            <div class="report-tags-row" id="reportMetaTags">
+              <span class="meta-tag">📄 評測資料集: <strong id="tagDataset">-</strong></span>
+              <span class="meta-tag">⏱️ 評測時間: <strong id="tagTime">-</strong></span>
+              <span class="meta-tag">🎯 題目總數: <strong id="tagTotalQueries">-</strong></span>
+              <span class="meta-tag">🖼️ 資料庫圖數: <strong id="tagTotalImages">-</strong></span>
+              <span class="meta-tag">💻 計算裝置: <strong id="tagDevice">-</strong></span>
+            </div>
+          </div>
+
+          <!-- Executive Summary Dashboard -->
+          <div class="benchmark-summary-section" id="benchmarkSummarySection">
+            <!-- 4 Core Metric KPI Cards -->
+            <div class="kpi-grid">
+              <div class="kpi-card highlight">
+                <div class="kpi-title">🏆 Full Pipeline Hit@1</div>
+                <div class="kpi-val" id="kpiHit1">-</div>
+                <div class="kpi-sub" id="kpiHit1Sub">首位圖檔直接命中率</div>
+              </div>
+              <div class="kpi-card">
+                <div class="kpi-title">🎯 Full Pipeline Hit@5</div>
+                <div class="kpi-val" id="kpiHit5">-</div>
+                <div class="kpi-sub" id="kpiHit5Sub">前 5 名包含目標覆蓋率</div>
+              </div>
+              <div class="kpi-card">
+                <div class="kpi-title">📈 平均倒數排名 (MRR@10)</div>
+                <div class="kpi-val" id="kpiMrr">-</div>
+                <div class="kpi-sub">Mean Reciprocal Rank</div>
+              </div>
+              <div class="kpi-card">
+                <div class="kpi-title">⏱️ 檢索延遲 P50 / 平均</div>
+                <div class="kpi-val" id="kpiLatency">-</div>
+                <div class="kpi-sub" id="kpiLatencySub">雙塔候選召回 + 重排延遲</div>
+              </div>
+            </div>
+
+            <!-- Overall Ablation Comparison Table -->
+            <div class="table-card">
+              <div class="table-card-header">
+                <h4>📊 4 大檢索架構消融實驗對比表 (Overall Ablation Summary)</h4>
+                <span class="table-subtitle">驗證關鍵字 (BM25)、向量 (Dense)、融合粗排 (RRF) 與交叉注意力精排 (Cross-Encoder) 之指標貢獻</span>
+              </div>
+              <div class="table-responsive">
+                <table class="benchmark-table" id="ablationTable">
+                  <thead>
+                    <tr>
+                      <th>檢索架構 (Arm)</th>
+                      <th>架構特點與描述</th>
+                      <th>Hit@1</th>
+                      <th>Hit@3</th>
+                      <th>Hit@5</th>
+                      <th>Hit@10</th>
+                      <th>MRR@10</th>
+                      <th>nDCG@10</th>
+                      <th>P50 延遲</th>
+                      <th>平均延遲</th>
+                    </tr>
+                  </thead>
+                  <tbody id="ablationTableBody">
+                    <tr><td colspan="10" style="text-align:center; padding: 24px;">載入報告消融數據中...</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- Per-Level Breakdown Table -->
+            <div class="table-card">
+              <div class="table-card-header">
+                <h4>🎯 查詢難度等級分層評測對比 (Per-Level Breakdown Summary)</h4>
+                <span class="table-subtitle">各檢索架構面對「精確圖題/關鍵字」、「農業問答段落」、「視覺外觀/病徵」之召回能力對照</span>
+              </div>
+              <div class="table-responsive">
+                <table class="benchmark-table" id="levelTable">
+                  <thead>
+                    <tr>
+                      <th>難度等級 (Level)</th>
+                      <th>題目數</th>
+                      <th>BM25 Hit@1 / Hit@5</th>
+                      <th>Dense Hit@1 / Hit@5</th>
+                      <th>RRF Hit@1 / Hit@5</th>
+                      <th>Full Pipeline Hit@1 / Hit@5</th>
+                      <th>架構差異與關鍵洞察</th>
+                    </tr>
+                  </thead>
+                  <tbody id="levelTableBody">
+                    <tr><td colspan="7" style="text-align:center; padding: 24px;">載入分難度數據中...</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- Per-Query Detailed Inspector -->
+          <div class="query-inspector-section">
+            <div class="query-inspector-header">
+              <div class="query-inspector-titles">
+                <h4>🔍 評測題目逐筆檢索明細 (Per-Query Inspection)</h4>
+                <p>檢視每一筆查詢題目、標準答案目標圖片，以及系統檢索出之 Top 10 圖片、排名、相似度信心值與座標</p>
+              </div>
+              <!-- Filter Controls -->
+              <div class="query-filter-bar">
+                <select id="queryLevelFilter" class="dev-select sm" onchange="filterQueryList()">
+                  <option value="all">全部難度等級</option>
+                  <option value="1">Level 1 (精確圖題/關鍵字)</option>
+                  <option value="2">Level 2 (農業問答/內文段落)</option>
+                  <option value="3">Level 3 (視覺外觀/病徵描述)</option>
+                  <option value="4">Level 4 (負向干擾/抗拒檢索)</option>
+                </select>
+                <select id="queryHitFilter" class="dev-select sm" onchange="filterQueryList()">
+                  <option value="all">全部命中狀態</option>
+                  <option value="hit1">首位命中 (Hit@1)</option>
+                  <option value="hit5">前五命中 (Hit@5)</option>
+                  <option value="miss">未命中 (Miss)</option>
+                </select>
+                <input type="text" id="querySearchFilter" class="dev-input sm" placeholder="過濾查詢題目或文獻文字..." oninput="filterQueryList()">
+                <span class="filter-count-badge" id="queryFilterCount">顯示 0 / 0 筆</span>
+              </div>
+            </div>
+
+            <!-- Query Cards Container -->
+            <div class="query-cards-container" id="benchmarkQueryList">
+              <div class="empty-state sm">載入評測明細中...</div>
+            </div>
+          </div>
+
+          <!-- Raw JSON Viewer Accordion -->
+          <div class="raw-json-card" id="rawJsonSection" style="display:none;">
+            <div class="raw-json-header">
+              <h4>📦 原始 Report JSON 數據 (Raw Data)</h4>
+              <div class="raw-json-actions">
+                <button class="btn-action sm" id="copyJsonBtn" onclick="copyRawJson()">📋 複製完整 JSON</button>
+                <button class="btn-action sm secondary" onclick="toggleRawJson()">✕ 關閉</button>
+              </div>
+            </div>
+            <pre class="raw-json-pre" id="rawJsonPre"></pre>
+          </div>
         </div>
 
-        <div class="tab-body" id="bm25Tab" style="display:none;">
-          <div class="diag-form-row">
-            <input type="text" id="diagBm25Input" class="diag-input" placeholder="輸入 BM25 測試查詢詞..." value="山藥 塊莖 肉色雪白">
-            <button class="btn-action" onclick="runDiagBM25()">執行獨立 BM25 檢索</button>
+        <!-- Mode 2: Unit Diagnostics (Original 4 Isolation Tests) -->
+        <div class="dev-mode-content" id="devIsolationView" style="display:none;">
+          <div class="diagnostics-tabs">
+            <button class="tab-btn active" onclick="switchDiagTab('tokenizeTab', event)">1. Jieba 斷詞分析</button>
+            <button class="tab-btn" onclick="switchDiagTab('bm25Tab', event)">2. BM25 獨立檢索</button>
+            <button class="tab-btn" onclick="switchDiagTab('denseTab', event)">3. 向量語意獨立檢索</button>
+            <button class="tab-btn" onclick="switchDiagTab('rerankTab', event)">4. Cross-Encoder 交叉注意力測試</button>
           </div>
-          <div class="diag-output" id="diagBm25Output">點擊執行查看 BM25 打分與 Token 比對...</div>
-        </div>
 
-        <div class="tab-body" id="denseTab" style="display:none;">
-          <div class="diag-form-row">
-            <input type="text" id="diagDenseInput" class="diag-input" placeholder="輸入語意測試查詢詞..." value="陽明山晚熟品種產量">
-            <button class="btn-action" onclick="runDiagDense()">執行獨立向量檢索</button>
+          <div class="tab-body" id="tokenizeTab">
+            <div class="diag-form-row">
+              <input type="text" id="diagTokInput" class="diag-input" placeholder="輸入欲測試斷詞的句子..."
+                value="山藥桃園4號地下塊莖特點與栽培效益">
+              <button class="btn-action" onclick="runDiagTokenize()">執行斷詞分析</button>
+            </div>
+            <div class="diag-output" id="diagTokOutput">點擊執行查看斷詞結果...</div>
           </div>
-          <div class="diag-output" id="diagDenseOutput">點擊執行查看語意餘弦相似度...</div>
-        </div>
 
-        <div class="tab-body" id="rerankTab" style="display:none;">
-          <div class="diag-form-col">
-            <input type="text" id="diagRerankQuery" class="diag-input" placeholder="Query: 例如 '山藥 晚熟 避開盛產期'"
-              value="山藥 晚熟 避開盛產期">
-            <textarea id="diagRerankTexts" class="diag-textarea" rows="4" placeholder="輸入候選文獻（每行一篇）..."></textarea>
-            <button class="btn-action" onclick="runDiagRerank()">執行 Cross-Encoder 相關度交叉評分</button>
+          <div class="tab-body" id="bm25Tab" style="display:none;">
+            <div class="diag-form-row">
+              <input type="text" id="diagBm25Input" class="diag-input" placeholder="輸入 BM25 測試查詢詞..." value="山藥 塊莖 肉色雪白">
+              <button class="btn-action" onclick="runDiagBM25()">執行獨立 BM25 檢索</button>
+            </div>
+            <div class="diag-output" id="diagBm25Output">點擊執行查看 BM25 打分與 Token 比對...</div>
           </div>
-          <div class="diag-output" id="diagRerankOutput">點擊執行查看精排 Logit 與 Sigmoid 機率...</div>
+
+          <div class="tab-body" id="denseTab" style="display:none;">
+            <div class="diag-form-row">
+              <input type="text" id="diagDenseInput" class="diag-input" placeholder="輸入語意測試查詢詞..." value="陽明山晚熟品種產量">
+              <button class="btn-action" onclick="runDiagDense()">執行獨立向量檢索</button>
+            </div>
+            <div class="diag-output" id="diagDenseOutput">點擊執行查看語意餘弦相似度...</div>
+          </div>
+
+          <div class="tab-body" id="rerankTab" style="display:none;">
+            <div class="diag-form-col">
+              <input type="text" id="diagRerankQuery" class="diag-input" placeholder="Query: 例如 '山藥 晚熟 避開盛產期'"
+                value="山藥 晚熟 避開盛產期">
+              <textarea id="diagRerankTexts" class="diag-textarea" rows="4" placeholder="輸入候選文獻（每行一篇）..."></textarea>
+              <button class="btn-action" onclick="runDiagRerank()">執行 Cross-Encoder 相關度交叉評分</button>
+            </div>
+            <div class="diag-output" id="diagRerankOutput">點擊執行查看精排 Logit 與 Sigmoid 機率...</div>
+          </div>
         </div>
       </section>
 

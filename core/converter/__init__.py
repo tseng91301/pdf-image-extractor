@@ -1,10 +1,16 @@
 import os
 import shutil
 os.environ.setdefault("PADDLE_PDX_DISABLE_MODEL_SOURCE_CHECK", "True")
+
+# 自動檢測並過濾相容之 GPU 架構 (排除超過 SM 9.0 之 Blackwell，鎖定 RTX A6000)
+from .gpu_config import setup_paddle_gpu_environment
+setup_paddle_gpu_environment()
+
 import fitz  # PyMuPDF
 from PIL import Image
 import cv2
 import json
+import re
 import numpy as np
 
 import paddle
@@ -12,6 +18,11 @@ from paddleocr import LayoutDetection
 
 from .tools import random_uid
 from .tools.coordinates import map_bbox
+from .tools.text_validation import (
+    extract_figure_identifier,
+    is_masthead_or_metadata,
+    clean_extracted_text
+)
 from .img_data import ImgData
 
 def match_xref_for_rect(page: fitz.Page, rect_pdf: fitz.Rect):
@@ -133,10 +144,10 @@ class PdfInfo:
                         image=l['input_img'],
                         page_boxes=l['boxes'],
                         image_box_index=i,
-                        gpu=self.use_gpu
+                        gpu=self.use_gpu,
+                        raw_pdf_path=self.pdf_path,
+                        img_page=i0
                     )
-                    i_d.img_page = i0
-                    i_d.raw_pdf_path = self.pdf_path
                     if optimize_resolution:
                         # 從原版的 pdf 文件用較高畫質擷取圖片範圍
                         now_img_data_index = len(self.pdf_imgdatas)
@@ -171,15 +182,139 @@ class PdfInfo:
                     self.pdf_imgdatas.append(i_d)
         return self.pdf_imgdatas
     
-    def extract_image_description(self, export=False, nl=False):
+    def resolve_cross_references(self, max_refs_per_image: int = 3, max_page_distance: int = 2):
+        """
+        跨頁面/跨段落正文引用關聯 (Cross-Reference Resolution):
+        1. 針對每張已辨識出圖表編號 (例如「圖1」、「Figure 2」、「表 3」) 的圖片，
+        2. 全文檢索所有 PDF 頁面中的正文段落，尋找對該圖的引用 (例如「如圖1」、「見圖 1 所示」、「(Figure 2)」)，
+        3. 將最相關的引用段落標註為 [正文引用 第X頁] 並加入到該圖片的 surrounding_texts 與 cross_references，
+        4. 嚴格加入 max_page_distance 篇章邊界約束（預設前後 2 頁內），防止專訊/期刊跨不同獨立文章大串味。
+        """
+        if not self.pdf_imgdatas:
+            return
+
+        # 1. 建立 figure_key -> list of (img_data, fig_info) 映射
+        fig_map = {}
+        for img_data in self.pdf_imgdatas:
+            if not img_data.image_has_figure_title or not img_data.image_figure_title_text:
+                continue
+            fig_info = extract_figure_identifier(img_data.image_figure_title_text)
+            if fig_info:
+                key = fig_info["raw_key"]
+                if key not in fig_map:
+                    fig_map[key] = []
+                fig_map[key].append((img_data, fig_info))
+
+        if not fig_map:
+            return
+
+        print(f"[PdfInfo] 啟動全文正文引用關聯分析 (Cross-Reference Resolution)，針對 {len(fig_map)} 組圖表編號...")
+
+        # 2. 為每個 figure key 預先編譯正則表達式
+        compiled_patterns = {}
+        for key, items in fig_map.items():
+            fig_info = items[0][1]
+            prefix = fig_info["prefix"]
+            num = fig_info["number"]
+
+            # 正則引用特徵：
+            # (A) 括弧引用: (如圖1), （見圖 1）, (Fig. 1), (Figure 1A)
+            # (B) 正文動詞引導: 如圖1, 見圖1, 參見圖1, 如圖 1 所示, 詳見圖1
+            # (C) 主詞引導: 圖1為, 圖 1 是, 圖1顯示, 圖1表示, Figure 1 shows, Fig. 1 illustrates
+            pat_str = (
+                rf"(?:"
+                rf"[（\(]\s*(?:如|見|參見|參閱|詳見|請參照|如所附|see)?\s*(?:{re.escape(prefix)})\s*{re.escape(num)}\b[^\)）]{{0,30}}[）\)]"
+                rf"|"
+                rf"(?:如|見|參見|參閱|詳見|請參照)\s*(?:{re.escape(prefix)})\s*{re.escape(num)}(?=[^\d]|$)"
+                rf"|"
+                rf"(?:{re.escape(prefix)})\s*{re.escape(num)}\s*(?:為|是|顯示|表示|顯示出|所示|中可見|中可知|呈現|指|係指)"
+                rf"|"
+                rf"(?:Figure|Fig\.?)\s*{re.escape(num)}\s+(?:shows|illustrates|depicts|demonstrates|presents|indicates|reveals)"
+                rf")"
+            )
+            compiled_patterns[key] = re.compile(pat_str, re.IGNORECASE)
+
+        # 3. 掃描 PDF 全文所有頁面之文字塊 (Text Blocks)
+        total_linked = 0
+        for page_idx in range(len(self.pdf_doc)):
+            page = self.pdf_doc[page_idx]
+            blocks = page.get_text("blocks")
+            for block in blocks:
+                if len(block) < 7 or block[6] != 0:  # block_type == 0 為純文字
+                    continue
+
+                raw_text = block[4].strip()
+                if len(raw_text) < 15:
+                    continue
+
+                clean_para = clean_extracted_text(raw_text, nl=False)
+                if is_masthead_or_metadata(clean_para):
+                    continue
+
+                for key, pattern in compiled_patterns.items():
+                    if pattern.search(clean_para):
+                        for img_data, fig_info in fig_map[key]:
+                            # 限制正文引用必須在圖片所在頁面的前後 max_page_distance 頁以內 (預設 2 頁)
+                            # 避免跨越期刊/專訊中不同技術文章造成嚴重的跨領域語意污染
+                            if abs(page_idx - img_data.img_page) > max_page_distance:
+                                continue
+
+                            # 避免將 Caption 本身當作引用
+                            if (
+                                img_data.img_page == page_idx and
+                                img_data.image_figure_title_text and
+                                img_data.image_figure_title_text in clean_para and
+                                len(clean_para) - len(img_data.image_figure_title_text) < 20
+                            ):
+                                continue
+
+                            ref_entry = f"[正文引用 第{page_idx+1}頁] {clean_para}"
+                            if ref_entry not in img_data.cross_references:
+                                if len(img_data.cross_references) < max_refs_per_image:
+                                    img_data.cross_references.append(ref_entry)
+                                    if ref_entry not in img_data.image_surrounding_texts:
+                                        img_data.image_surrounding_texts.append(ref_entry)
+                                        total_linked += 1
+
+        print(f"[PdfInfo] 全文正文引用關聯分析完成，共成功鏈結 {total_linked} 處正文引用至對應圖片。")
+
+    def extract_image_description(self, export=False, nl=False, resolve_refs=True):
         """
         將所有圖片周圍的 title, text 的文字資料提取出來
-        方法: 先嘗試使用一般的 pdf 文字提取，若提取不到或是提取出來為亂碼會自動使用 OCR 來取得文字
+        方法: 先嘗試使用一般的 pdf 文字提取，若提取不到或是提取出來為亂碼會自動使用 OCR 來取得文字。
+        接著執行 resolve_cross_references() 全文正文引用關聯分析。
         """
         n = len(self.pdf_imgdatas)
         for i, img in enumerate(self.pdf_imgdatas):
             print(f"Getting surrounding texts and figure_title of image {i+1}/{n}, reading page {img.img_page+1}")
             img.get_surroundings(cv2.imread(self.pdf_img_paths[img.img_page]), nl=nl)
+
+        # 同一頁面共同圖題防搶奪去重 (Single-Caption Claim per page)
+        # 若同頁多張圖片搶奪同一個 Caption 方框，僅保留評分最高者，避免同頁多圖撞名
+        imgs_by_page = {}
+        for img in self.pdf_imgdatas:
+            imgs_by_page.setdefault(img.img_page, []).append(img)
+
+        for page_idx, page_imgs in imgs_by_page.items():
+            title_to_imgs = {}
+            for img in page_imgs:
+                if img.image_has_figure_title and img.image_figure_title_text:
+                    title_to_imgs.setdefault(img.image_figure_title_text, []).append(img)
+
+            for title_text, claimed_imgs in title_to_imgs.items():
+                if len(claimed_imgs) > 1:
+                    # 依據標題評分由高至低排序，最高分者勝出
+                    claimed_imgs.sort(key=lambda x: getattr(x, 'image_caption_score', 0.0), reverse=True)
+                    # 其餘圖片撤銷圖題，避免同頁圖片產生假性圖題碰撞
+                    for other_img in claimed_imgs[1:]:
+                        other_img.image_has_figure_title = False
+                        other_img.image_figure_title_text = ""
+                        other_img.image_figure_title_box = None
+                        other_img.image_caption_score = -1.0
+            
+        if resolve_refs:
+            self.resolve_cross_references()
+            
         if export:
             self.export_all_image_datas()
             
@@ -199,8 +334,16 @@ class PdfInfo:
             if img_data.image_has_figure_title:
                 description["figure_title"] = img_data.image_figure_title_text
             description["surrounding_texts"] = img_data.image_surrounding_texts
+            description["cross_references"] = getattr(img_data, "cross_references", [])
             img_data.save_image(os.path.join(path, f"{name}.png"))
-            metadata["imgs"].append({"name": name, "page": img_data.img_page+1, "coordinate": img_data.coordinate, "figure_title": description["figure_title"], "surrounding_texts": description["surrounding_texts"]})
+            metadata["imgs"].append({
+                "name": name,
+                "page": img_data.img_page+1,
+                "coordinate": img_data.coordinate,
+                "figure_title": description["figure_title"],
+                "surrounding_texts": description["surrounding_texts"],
+                "cross_references": description["cross_references"]
+            })
         open(os.path.join(path, "metadata.json"), "w").write(json.dumps(metadata, ensure_ascii=False, indent=4))
         print(f"Export successfully!")
             
@@ -208,7 +351,6 @@ class PdfInfo:
         """
         Docstring for export_all_images_and_image_descriptions
         
-        :param self: Description
         說明:
             將上面的方法全部結合起來，一個指令直接提取 pdf 中所有圖片以及可能的說明文字
         """
