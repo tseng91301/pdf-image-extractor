@@ -35,7 +35,7 @@ class DenseRetriever:
             return self
 
         logger.info(f"Generating dense embeddings for {self.num_documents} documents...")
-        caption_texts = [doc.caption_text or doc.figure_title or doc.doc_name for doc in documents]
+        caption_texts = [doc.caption_text or doc.figure_title or "" for doc in documents]
         context_texts = [doc.context_text or doc.full_text for doc in documents]
 
         # Batch encode with normalization

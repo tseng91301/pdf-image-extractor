@@ -44,28 +44,18 @@ class ImageDocument(BaseModel):
     bm25_text: str = Field(default="", description="Token text prepared for BM25 indexing with field weighting")
 
     def build_text_representations(self, caption_weight_repeat: int = 2) -> "ImageDocument":
-        """Builds derived text representations for indexing from raw fields."""
+        """Builds derived text representations for indexing from raw fields without document source bias."""
         clean_title = (self.figure_title or "").strip()
-        clean_doc_name = (self.doc_name or "").strip()
         
-        # Caption text incorporates doc_name if title is empty or short
-        if clean_title and clean_doc_name:
-            self.caption_text = f"【{clean_doc_name}】 {clean_title}"
-        elif clean_title:
-            self.caption_text = clean_title
-        elif clean_doc_name:
-            self.caption_text = clean_doc_name
-        else:
-            self.caption_text = ""
+        # Caption text is strictly the figure title (pure image caption, no doc_name)
+        self.caption_text = clean_title
 
         # Context text aggregates all surrounding texts cleanly
         cleaned_surroundings = [st.strip() for st in self.surrounding_texts if st and st.strip()]
         self.context_text = " \n".join(cleaned_surroundings)
 
-        # Full text combines document title, caption, and context
+        # Full text combines caption and surrounding context (no doc_name)
         parts = []
-        if clean_doc_name:
-            parts.append(f"文獻: {clean_doc_name}")
         if clean_title:
             parts.append(f"圖題: {clean_title}")
         if self.context_text:
